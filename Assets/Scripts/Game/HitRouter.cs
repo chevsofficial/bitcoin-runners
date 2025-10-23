@@ -14,6 +14,7 @@ public class HitRouter : MonoBehaviour
         if (_pu && (_pu.Invulnerable || _pu.TryConsumeShieldHit())) return;
         AudioManager.I?.PlayHit();
         GameEvents.Hit();
+        HitStop.I.DoHitStopFrames(8);
         GameManager.I.PlayerDied();
     }
 }
