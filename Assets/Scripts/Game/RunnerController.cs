@@ -50,9 +50,23 @@ public class RunnerController : MonoBehaviour
         if (!GameManager.I.Alive) return;
 
         // --- Input: lane / jump / slide ---
-        if (InputManager.I.Left && lane > 0) { lane--; laneSwitchT = 0f; }
-        if (InputManager.I.Right && lane < 2) { lane++; laneSwitchT = 0f; }
-        if (InputManager.I.Up && jumpT <= 0f && !sliding) { jumpT = cfg.jumpAirTime; }
+        if (InputManager.I.Left && lane > 0)
+        {
+            lane--;
+            laneSwitchT = 0f;
+            GameEvents.LaneSwap(-1);
+        }
+        if (InputManager.I.Right && lane < 2)
+        {
+            lane++;
+            laneSwitchT = 0f;
+            GameEvents.LaneSwap(+1);
+        }
+        if (InputManager.I.Up && jumpT <= 0f && !sliding)
+        {
+            jumpT = cfg.jumpAirTime;
+            GameEvents.Jump();
+        }
 
         if (InputManager.I.Down && slideT <= 0f && !sliding && jumpT <= 0f)
         {
@@ -60,6 +74,7 @@ public class RunnerController : MonoBehaviour
             sliding = true;
             _cc.height = 1.0f; // crouch height
             _cc.center = new Vector3(_cc.center.x, _cc.height * 0.5f, _cc.center.z); // keep feet grounded
+            GameEvents.Slide();
         }
 
         // --- Lane tween (ease-out cubic) ---

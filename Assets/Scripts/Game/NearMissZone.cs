@@ -18,6 +18,7 @@ public class NearMissZone : MonoBehaviour
         {
             if (GameManager.I.Alive) // you lived = near miss
             {
+                GameEvents.NearMiss();
                 var shaker = Camera.main ? Camera.main.GetComponent<CameraShaker>() : null;
                 shaker?.Shake(0.25f, 0.05f);
                 // Optional: small reward or stat

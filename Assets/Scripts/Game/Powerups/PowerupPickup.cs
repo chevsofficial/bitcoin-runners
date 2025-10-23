@@ -25,6 +25,7 @@ public class PowerupPickup : MonoBehaviour
         {
             _collected = true;
             pu.Activate(type, duration);
+            GameEvents.PowerupPickup(type.ToString());
             // recycle back to its pool instead of SetActive(false)
             SimplePool.RecycleAny(gameObject);
         }
