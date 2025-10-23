@@ -24,11 +24,13 @@ public class CameraJuiceController : MonoBehaviour
     Camera _cam;
     float _baseFov;
     Coroutine _rollCo, _fovCo;
+    CameraShaker _shaker;
 
     void Awake()
     {
         _cam = GetComponent<Camera>();
         _baseFov = _cam.fieldOfView;
+        _shaker = GetComponent<CameraShaker>();
     }
 
     void OnEnable()
@@ -69,13 +71,20 @@ public class CameraJuiceController : MonoBehaviour
 
     void HandleNearMissShake()
     {
-        // Replace with your own shaker if needed
-        CameraShaker.Shake(nearMissShakeAmp, nearMissShakeDur);
+        if (_shaker == null)
+            _shaker = GetComponent<CameraShaker>();
+
+        if (_shaker != null)
+            _shaker.Shake(nearMissShakeDur, nearMissShakeAmp);
     }
 
     void HandleHitShake()
     {
-        CameraShaker.Shake(hitShakeAmp, hitShakeDur);
+        if (_shaker == null)
+            _shaker = GetComponent<CameraShaker>();
+
+        if (_shaker != null)
+            _shaker.Shake(hitShakeDur, hitShakeAmp);
     }
 
     IEnumerator RollSwayCo(float targetRoll, float dur)
