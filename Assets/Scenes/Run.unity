@@ -318,7 +318,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &206083965
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1950,6 +1950,7 @@ GameObject:
   - component: {fileID: 983709473}
   - component: {fileID: 983709474}
   - component: {fileID: 983709475}
+  - component: {fileID: 983709476}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2116,6 +2117,75 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35e588614d721d343b1f3da7c6b6e72b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NearMissZone
+--- !u!114 &983709476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 983709468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac6eda7354c8b5448a09ecc53698566a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraJuiceController
+  rollDegrees: 2.5
+  rollDuration: 0.12
+  rollCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fovJumpDelta: 2
+  fovSlideDelta: -2
+  fovDuration: 0.15
+  fovCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  nearMissShakeAmp: 0.05
+  nearMissShakeDur: 0.08
+  hitShakeAmp: 0.35
+  hitShakeDur: 0.25
 --- !u!1 &1062775267
 GameObject:
   m_ObjectHideFlags: 0
