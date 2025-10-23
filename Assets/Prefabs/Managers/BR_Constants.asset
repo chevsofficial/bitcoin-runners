@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9aef201e133c4c3469f266b32d20133b, type: 3}
+  m_Name: BR_Constants
+  m_EditorClassIdentifier: Assembly-CSharp::GameConstants
+  laneWidth: 2.2
+  laneCount: 3
+  startSpeed: 6
+  rampEverySec: 5
+  rampDelta: 0.15
+  speedCap: 16
+  laneSwitchTime: 0.12
+  jumpAirTime: 0.55
+  slideTime: 0.6
+  colliderSize: {x: 0.6, y: 1.7}
+  coinScore: 10
+  nearMissBonus: 5
+  segmentLen: 20
+  minObstacleSpacingEarly: 8
+  minObstacleSpacingLate: 6
