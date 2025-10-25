@@ -1,17 +1,16 @@
 using System.Collections;
 using UnityEngine;
-using Debug = UnityEngine.Debug; // <-- resolves Debug ambiguity
+using Debug = UnityEngine.Debug;
 
 public class HitRouter : MonoBehaviour
 {
     [Header("Scene Refs (assign in Inspector or auto-find)")]
-    [SerializeField] RunnerController runner;              // optional; auto-found
-    [SerializeField] CharacterController controller;       // optional; auto-found
-    [SerializeField] ResultsController resultsController;  // your ResultsController in the scene (can be inactive)
+    [SerializeField] RunnerController runner;            // optional; auto-found
+    [SerializeField] CharacterController controller;     // optional; auto-found
 
     [Header("Timing")]
-    [SerializeField] int hitStopFrames = 8;                // 6–10 feels good
-    [SerializeField] float resultsDelayRealtime = 0.05f;   // brief unscaled delay after hit-stop
+    [SerializeField] int hitStopFrames = 8;              // 6–10 feels good
+    [SerializeField] float resultsDelayRealtime = 0.05f; // brief unscaled delay after hit-stop
 
     bool _isDead;
 
@@ -19,10 +18,6 @@ public class HitRouter : MonoBehaviour
     {
         if (runner == null) runner = GetComponent<RunnerController>();
         if (controller == null) controller = GetComponent<CharacterController>();
-
-        // Find ResultsController even if inactive
-        if (resultsController == null)
-            resultsController = FindFirstObjectByType<ResultsController>(FindObjectsInactive.Include);
     }
 
     /// <summary>Call this when a fatal hit is detected.</summary>
@@ -42,28 +37,25 @@ public class HitRouter : MonoBehaviour
             controller.enabled = false;
         }
 
-        // If you have a public method, use that instead:
-        // GameManager.I?.OnPlayerDied(); // <-- only if it exists
-
         StartCoroutine(ShowResultsSequence());
     }
 
     IEnumerator ShowResultsSequence()
     {
+        // let hit-stop finish (unscaled)
         yield return new WaitForSecondsRealtime(resultsDelayRealtime);
 
+        // ensure UI isn’t stuck paused
         if (Time.timeScale < 0.99f) Time.timeScale = 1f;
 
-        if (resultsController == null)
-            resultsController = FindFirstObjectByType<ResultsController>(FindObjectsInactive.Include);
-
-        if (resultsController == null)
+        // delegate to GameManager — it shows the ResultsController panel & sets sorting
+        if (GameManager.I != null)
         {
-            Debug.LogError("HitRouter: ResultsController not found. Place one in the scene and (optionally) assign it in the Inspector.");
-            yield break;
+            GameManager.I.KillPlayer();
         }
-
-        if (!resultsController.gameObject.activeSelf)
-            resultsController.gameObject.SetActive(true); // OnEnable() inside ResultsController will refresh UI/ads
+        else
+        {
+            Debug.LogError("HitRouter: GameManager.I is null; cannot show results.");
+        }
     }
 }
