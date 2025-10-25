@@ -58,12 +58,12 @@ public class SimplePool : MonoBehaviour
     {
         if (go == null) return;
         var pr = go.GetComponent<PooledRef>();
-        if (pr == null || pr.owner == null)
-        {
-            Debug.LogWarning("[SimplePool] RecycleAny called on object without PooledRef/owner. Destroying.");
+            if (pr == null || pr.owner == null)
+                    {
+                        // Not a pooled instance — just destroy quietly.
             UnityEngine.Object.Destroy(go);
-            return;
-        }
+                        return;
+                    }
         pr.owner.Recycle(go);
     }
 
