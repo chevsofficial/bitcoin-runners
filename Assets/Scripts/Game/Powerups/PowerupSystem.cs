@@ -76,11 +76,7 @@ public class PowerupSystem : MonoBehaviour
         foreach (var h in hits)
         {
             var coin = h.GetComponent<Coin>();
-            if (coin && h.gameObject.activeSelf)
-            {
-                GameManager.I.AddCoin(1);
-                h.gameObject.SetActive(false);
-            }
+            if (coin && h.gameObject.activeSelf) coin.Collect();
         }
     }
 

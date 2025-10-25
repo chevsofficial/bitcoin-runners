@@ -73,4 +73,40 @@ public class SimplePool : MonoBehaviour
         if (pr == null) pr = go.AddComponent<PooledRef>();
         pr.owner = this;
     }
+
+    // Utility: get or instantiate a one-shot FX that isn't prepooled
+    public static GameObject GetOrInstantiate(GameObject prefab)
+    {
+        if (!prefab) return null;
+        // If the prefab itself has a PooledRef with an owner, get from that pool
+        var pr = prefab.GetComponent<PooledRef>();
+        if (pr && pr.owner) return pr.owner.Get();
+        // else, just instantiate transiently
+        return UnityEngine.Object.Instantiate(prefab);
+    }
+
+    // Utility: recycle/destroy after delay for transient FX
+    public static void RecycleAfter(GameObject go, float delay)
+    {
+        if (!go) return;
+        var mb = go.GetComponent<MonoBehaviour>();
+        if (mb)
+        {
+            mb.StartCoroutine(_RecycleLater(go, delay));
+        }
+        else
+        {
+            // create a tiny host to run coroutine
+            var host = new GameObject("[PoolDelayHost]").AddComponent<PoolDelayHost>();
+            host.StartCoroutine(_RecycleLater(go, delay));
+        }
+    }
+
+    static System.Collections.IEnumerator _RecycleLater(GameObject go, float t)
+    {
+        yield return new WaitForSeconds(t);
+        RecycleAny(go);
+    }
+
+    private class PoolDelayHost : MonoBehaviour {}
 }
