@@ -40,6 +40,11 @@ public class TrackGenerator : MonoBehaviour
             {
                 var go = live[i];
                 live.RemoveAt(i);
+                // spawn quick debris for obstacles only
+                if (go.CompareTag("ObstacleBarrier") || go.CompareTag("ObstacleLowBar") || go.CompareTag("ObstacleGap"))
+                {
+                    FXSpawner.BurstDebris(go.transform.position);
+                }
                 SimplePool.RecycleAny(go);
             }
         }
