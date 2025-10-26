@@ -29,13 +29,20 @@ public class Coin : MonoBehaviour
     }
 
     // Called by magnet path too
-    public void Collect()
+    public void Collect(bool viaMagnet = false)
     {
         if (_collected) return;
         _collected = true;
 
         GameManager.I.AddCoin(1);
-        AudioManager.I?.PlayCoin();
+        if (viaMagnet)
+        {
+            AudioManager.I?.PlayCoinChainTick();
+        }
+        else
+        {
+            AudioManager.I?.PlayCoin();
+        }
 
         if (sparklePrefab)
         {

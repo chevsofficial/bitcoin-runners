@@ -64,6 +64,10 @@ public class PowerupSystem : MonoBehaviour
         {
             Invulnerable = false;
         }
+        else if (Active == PowerType.Magnet)
+        {
+            AudioManager.I?.EndCoinChain();
+        }
         var ended = Active;
         Active = PowerType.None;
         _timeLeft = 0f;
@@ -76,12 +80,15 @@ public class PowerupSystem : MonoBehaviour
         foreach (var h in hits)
         {
             var coin = h.GetComponent<Coin>();
-                    if (coin && h.gameObject.activeSelf)
-                    {
-                        // Let the coin handle SFX/FX and recycle itself (pooled-safe)
-            coin.SendMessage("OnTriggerEnter", GetComponent<Collider>(), SendMessageOptions.DontRequireReceiver);
-                        // Or, if you implemented a public Collect(): coin.Collect();
-                    }
+            if (coin && h.gameObject.activeSelf)
+            {
+                coin.Collect(true);
+            }
+            else
+            {
+                // Fallback for collectibles that still expect trigger delivery
+                h.SendMessage("OnTriggerEnter", GetComponent<Collider>(), SendMessageOptions.DontRequireReceiver);
+            }
         }
     }
 

@@ -55,12 +55,14 @@ public class RunnerController : MonoBehaviour
             lane--;
             laneSwitchT = 0f;
             GameEvents.LaneSwap(-1);
+            AudioManager.I?.PlayWhoosh();
         }
         if (InputManager.I.Right && lane < 2)
         {
             lane++;
             laneSwitchT = 0f;
             GameEvents.LaneSwap(+1);
+            AudioManager.I?.PlayWhoosh();
         }
         if (InputManager.I.Up && jumpT <= 0f && !sliding)
         {
@@ -75,6 +77,7 @@ public class RunnerController : MonoBehaviour
             _cc.height = 1.0f; // crouch height
             _cc.center = new Vector3(_cc.center.x, _cc.height * 0.5f, _cc.center.z); // keep feet grounded
             GameEvents.Slide();
+            AudioManager.I?.PlaySlideThunk();
         }
 
         // --- Lane tween (ease-out cubic) ---
