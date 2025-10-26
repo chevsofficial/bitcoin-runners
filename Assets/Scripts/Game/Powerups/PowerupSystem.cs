@@ -12,11 +12,15 @@ public class PowerupSystem : MonoBehaviour
 
     public PowerType Active { get; private set; }
     float _timeLeft;
+    float _activeDuration;
     RunnerController _runner;
     float _dashEndSpeed;
 
     public System.Action<PowerType, float> OnPowerupTick; // for UI
     public System.Action<PowerType> OnPowerupStart, OnPowerupEnd;
+
+    public float ActiveDuration => _activeDuration;
+    public float TimeRemaining => Mathf.Max(0f, _timeLeft);
 
     void Awake() { _runner = GetComponent<RunnerController>(); }
 
@@ -37,6 +41,7 @@ public class PowerupSystem : MonoBehaviour
         if (Active != PowerType.None) EndPowerup();
         Active = type;
         _timeLeft = duration;
+        _activeDuration = duration;
         if (type == PowerType.Dash)
         {
             _dashEndSpeed = GameManager.I.Speed;
@@ -71,6 +76,7 @@ public class PowerupSystem : MonoBehaviour
         var ended = Active;
         Active = PowerType.None;
         _timeLeft = 0f;
+        _activeDuration = 0f;
         OnPowerupEnd?.Invoke(ended);
     }
 

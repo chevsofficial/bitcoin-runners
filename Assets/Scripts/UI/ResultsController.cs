@@ -1,12 +1,34 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
 public class ResultsController : MonoBehaviour
 {
-    public TMPro.TextMeshProUGUI scoreTxt, coinsTxt, bestTxt;
-    public Button replayBtn, homeBtn, continueBtn, x2Btn, removeAdsBtn;
+    [Header("Texts")]
+    public TMPro.TextMeshProUGUI scoreTxt;
+    public TMPro.TextMeshProUGUI coinsTxt;
+    public TMPro.TextMeshProUGUI bestTxt;
+
+    [Header("Buttons")]
+    public Button replayBtn;
+    public Button homeBtn;
+    public Button continueBtn;
+    public Button x2Btn;
+    public Button removeAdsBtn;
+
+    [Header("Reveal Groups")]
+    public GameObject scoreRow;
+    public GameObject bestRow;
+    public GameObject buttonsGroup;
+
+    [Header("Reveal Timing")]
+    public float revealStep = 0.15f;
+    public float tallyTime = 0.8f;
+
+    [Header("Audio")]
+    public AudioSource tickSource;
 
     bool _continuedThisRun;
     bool _x2Consumed;
@@ -17,7 +39,7 @@ public class ResultsController : MonoBehaviour
         StartCoroutine(RefreshNextFrame());
     }
 
-    System.Collections.IEnumerator RefreshNextFrame()
+    IEnumerator RefreshNextFrame()
     {
         // wait one frame to let singletons Awake
         yield return null;
@@ -33,13 +55,17 @@ public class ResultsController : MonoBehaviour
         int coins = gm.Coins;
         int score = ScoreSystem.CalcScore();
 
-        if (scoreTxt) scoreTxt.text = score.ToString();
-        if (coinsTxt) coinsTxt.text = coins.ToString();
-
         if (score > Prefs.BestScore) Prefs.BestScore = score;
-        if (bestTxt) bestTxt.text = Prefs.BestScore.ToString();
-        SaveSystem.Data.bestScore = Prefs.BestScore; SaveSystem.Save();
+        SaveSystem.Data.bestScore = Prefs.BestScore;
+        SaveSystem.Save();
 
+        if (scoreRow) scoreRow.SetActive(false);
+        if (bestRow) bestRow.SetActive(false);
+        if (buttonsGroup) buttonsGroup.SetActive(false);
+
+        if (coinsTxt) coinsTxt.text = "0";
+        if (scoreTxt) scoreTxt.text = string.Empty;
+        if (bestTxt) bestTxt.text = string.Empty;
 
         // Continue eligibility (≥ checkpoint stride, e.g. 150m)
         float lastCp = RunSession.LastCheckpoint(gm.Distance);
@@ -55,12 +81,58 @@ public class ResultsController : MonoBehaviour
 
         // Disable Remove Ads if already owned
         if (removeAdsBtn)
+        {
             removeAdsBtn.interactable = !(IAPManager.I?.HasRemoveAds ?? Prefs.RemoveAds);
+        }
 
         AdsManager.I?.OnRunEnded();
         _ = AdsManager.I?.TryShowInterstitial("results_interstitial");
 
         AnalyticsManager.I?.RunEnd(distance, coins, score, _continuedThisRun);
+
+        yield return StartCoroutine(RevealFlow(coins, score, Prefs.BestScore));
+    }
+
+    IEnumerator RevealFlow(int coins, int score, int bestScore)
+    {
+        if (scoreRow) scoreRow.SetActive(true);
+        yield return StartCoroutine(CoinTally(coins, tallyTime));
+        if (scoreTxt) scoreTxt.text = score.ToString();
+
+        yield return new WaitForSecondsRealtime(revealStep);
+
+        if (bestRow) bestRow.SetActive(true);
+        if (bestTxt) bestTxt.text = bestScore.ToString();
+
+        yield return new WaitForSecondsRealtime(revealStep);
+
+        if (buttonsGroup) buttonsGroup.SetActive(true);
+    }
+
+    IEnumerator CoinTally(int target, float time)
+    {
+        int start = 0;
+        float t = 0f;
+        float tickInterval = target > 0 ? 1f / Mathf.Max(8, target) : 0f;
+        float nextTick = 0f;
+
+        while (t < time)
+        {
+            t += Time.unscaledDeltaTime;
+            float a = time <= 0f ? 1f : Mathf.Clamp01(t / time);
+            int val = Mathf.RoundToInt(Mathf.Lerp(start, target, a));
+            if (coinsTxt) coinsTxt.text = val.ToString();
+
+            if (tickInterval > 0f && t >= nextTick)
+            {
+                nextTick += tickInterval;
+                if (tickSource) tickSource.Play();
+            }
+
+            yield return null;
+        }
+
+        if (coinsTxt) coinsTxt.text = target.ToString();
     }
 
     // ---------- Button handlers (required for the OnClick dropdown) ----------
@@ -98,6 +170,7 @@ public class ResultsController : MonoBehaviour
             GameManager.I.AddCoin(GameManager.I.Coins); // double
             _x2Consumed = true;
             if (x2Btn) x2Btn.interactable = false;
+            if (coinsTxt) coinsTxt.text = GameManager.I.Coins.ToString();
             if (scoreTxt) scoreTxt.text = ScoreSystem.CalcScore().ToString();
         });
     }
