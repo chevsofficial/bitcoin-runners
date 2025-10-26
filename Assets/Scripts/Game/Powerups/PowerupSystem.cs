@@ -50,7 +50,7 @@ public class PowerupSystem : MonoBehaviour
         }
         OnPowerupStart?.Invoke(type);
         AnalyticsManager.I?.PowerupStart(type.ToString(), duration);
-        AudioManager.I?.PlayWhoosh();
+        AudioManager.I?.PlayLaneWhoosh();
     }
 
     void EndPowerup()
