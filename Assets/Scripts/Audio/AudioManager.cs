@@ -70,11 +70,14 @@ public class AudioManager : MonoBehaviour
         sfx.PlayOneShot(hit, 1.0f * SfxVolume);
     }
 
-    public void PlayWhoosh()
+    public void PlayLaneWhoosh()
     {
         if (!SfxEnabled || sfx == null || whoosh == null) return;
         sfx.PlayOneShot(whoosh, 0.9f * SfxVolume);
     }
+
+    [System.Obsolete("Use PlayLaneWhoosh instead.")]
+    public void PlayWhoosh() => PlayLaneWhoosh();
 
     public void PlaySlideThunk()
     {

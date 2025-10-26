@@ -9,7 +9,7 @@ public class HitRouter : MonoBehaviour
     [SerializeField] CharacterController controller;     // optional; auto-found
 
     [Header("Timing")]
-    [SerializeField] int hitStopFrames = 8;              // 6–10 feels good
+    [SerializeField] int hitStopFrames = 8;              // 6â€“10 feels good
     [SerializeField] float resultsDelayRealtime = 0.05f; // brief unscaled delay after hit-stop
 
     bool _isDead;
@@ -26,6 +26,8 @@ public class HitRouter : MonoBehaviour
         if (_isDead) return;
         _isDead = true;
 
+        AudioManager.I?.PlayHit();
+        Haptics.Heavy();
         GameEvents.Hit();
         HitStop.I?.DoHitStopFrames(hitStopFrames);
 
@@ -45,10 +47,10 @@ public class HitRouter : MonoBehaviour
         // let hit-stop finish (unscaled)
         yield return new WaitForSecondsRealtime(resultsDelayRealtime);
 
-        // ensure UI isn’t stuck paused
+        // ensure UI isnâ€™t stuck paused
         if (Time.timeScale < 0.99f) Time.timeScale = 1f;
 
-        // delegate to GameManager — it shows the ResultsController panel & sets sorting
+        // delegate to GameManager â€” it shows the ResultsController panel & sets sorting
         if (GameManager.I != null)
         {
             GameManager.I.KillPlayer();

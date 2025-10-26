@@ -42,6 +42,7 @@ public class Coin : MonoBehaviour
         else
         {
             AudioManager.I?.PlayCoin();
+            Haptics.Light();
         }
 
         if (sparklePrefab)

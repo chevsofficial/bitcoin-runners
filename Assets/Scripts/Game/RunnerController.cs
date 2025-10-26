@@ -55,14 +55,14 @@ public class RunnerController : MonoBehaviour
             lane--;
             laneSwitchT = 0f;
             GameEvents.LaneSwap(-1);
-            AudioManager.I?.PlayWhoosh();
+            AudioManager.I?.PlayLaneWhoosh();
         }
         if (InputManager.I.Right && lane < 2)
         {
             lane++;
             laneSwitchT = 0f;
             GameEvents.LaneSwap(+1);
-            AudioManager.I?.PlayWhoosh();
+            AudioManager.I?.PlayLaneWhoosh();
         }
         if (InputManager.I.Up && jumpT <= 0f && !sliding)
         {
