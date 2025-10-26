@@ -15,6 +15,10 @@ public class GameManager : MonoBehaviour
     [Tooltip("Optional: will be auto-bound by ResultsPanelBinder in the Run scene.")]
     public GameObject resultsPanel;
 
+    [Header("Audio")]
+    [Tooltip("Number of speed ramps before switching to the intense music deck (<=0 to disable).")]
+    public int intenseRampThreshold = 5;
+
     public float Speed { get; private set; }
     public float Distance { get; private set; }
     public int Coins { get; private set; }
@@ -22,6 +26,7 @@ public class GameManager : MonoBehaviour
 
     float _startTime;
     bool _manualSpeed;
+    bool _musicIntense;
 
     public void SetDistance(float d) => Distance = Mathf.Max(0f, d);
 
@@ -91,6 +96,9 @@ public class GameManager : MonoBehaviour
         Coins = 0;
         Alive = true;
         _startTime = Time.time;
+        _musicIntense = false;
+
+        AudioManager.I?.CrossfadeToBase();
 
         // Make sure the results UI is hidden at run start
         var panel = EnsureResultsPanel();
@@ -103,14 +111,21 @@ public class GameManager : MonoBehaviour
     {
         if (!Alive) return;
 
+        float rampInterval = cfg ? Mathf.Max(0.0001f, cfg.rampEverySec) : 5f;
+        int ramps = Mathf.FloorToInt((Time.time - _startTime) / rampInterval);
+
         if (!_manualSpeed)
         {
-            float t = Time.time - _startTime;
-            int ramps = Mathf.FloorToInt(t / (cfg ? Mathf.Max(0.0001f, cfg.rampEverySec) : 5f));
             float start = cfg ? cfg.startSpeed : 6f;
             float delta = cfg ? cfg.rampDelta : 0.5f;
             float cap = cfg ? cfg.speedCap : 20f;
             Speed = Mathf.Min(cap, start + ramps * delta);
+        }
+
+        if (!_musicIntense && intenseRampThreshold > 0 && ramps >= intenseRampThreshold)
+        {
+            AudioManager.I?.CrossfadeToIntense();
+            _musicIntense = true;
         }
         Distance += Speed * Time.deltaTime;
     }
@@ -148,6 +163,9 @@ public class GameManager : MonoBehaviour
         if (!c) c = panel.AddComponent<Canvas>();
         c.overrideSorting = true;
         c.sortingOrder = 1000; // higher than any HUD canvas
+
+        AudioManager.I?.CrossfadeToBase();
+        _musicIntense = false;
 
     }
 
