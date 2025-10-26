@@ -51,6 +51,12 @@ public class PowerupHUD : MonoBehaviour
 
     void OnStartPU(PowerType t)
     {
+        // Make sure the badge hierarchy is active before we trigger any animations.
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
         icon.sprite = t == PowerType.Magnet ? magnetSprite
                     : t == PowerType.Shield ? shieldSprite
                     : dashSprite;
@@ -63,8 +69,6 @@ public class PowerupHUD : MonoBehaviour
         {
             badgeAnimator.OnPowerupStart(_pu.ActiveDuration);
         }
-
-        gameObject.SetActive(true);
     }
 
     void OnTickPU(PowerType t, float timeLeft)
