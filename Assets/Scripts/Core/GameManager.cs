@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
 
     [Header("Config")]
     public GameConstants cfg;
+    [Header("Difficulty")]
+    public DifficultyProfile difficulty;
 
     [Header("UI Hooks")]
     [Tooltip("Optional: will be auto-bound by ResultsPanelBinder in the Run scene.")]
@@ -116,10 +118,18 @@ public class GameManager : MonoBehaviour
 
         if (!_manualSpeed)
         {
-            float start = cfg ? cfg.startSpeed : 6f;
-            float delta = cfg ? cfg.rampDelta : 0.5f;
-            float cap = cfg ? cfg.speedCap : 20f;
-            Speed = Mathf.Min(cap, start + ramps * delta);
+            float t = Time.time - _startTime;
+            if (difficulty)
+            {
+                Speed = difficulty.SpeedAt(t);
+            }
+            else
+            {
+                float start = cfg ? cfg.startSpeed : 6f;
+                float delta = cfg ? cfg.rampDelta : 0.5f;
+                float cap = cfg ? cfg.speedCap : 20f;
+                Speed = Mathf.Min(cap, start + ramps * delta);
+            }
         }
 
         if (!_musicIntense && intenseRampThreshold > 0 && ramps >= intenseRampThreshold)
