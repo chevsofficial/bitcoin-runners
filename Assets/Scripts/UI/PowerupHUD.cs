@@ -11,6 +11,9 @@ public class PowerupHUD : MonoBehaviour
     public Image icon;                // drag Badge (Image) here
     public TextMeshProUGUI timeTxt;   // drag TimeText here
 
+    [Header("Animation")]
+    public PowerupBadgeAnimator badgeAnimator;
+
     [Header("Sprites")]
     public Sprite magnetSprite;
     public Sprite shieldSprite;
@@ -27,6 +30,10 @@ public class PowerupHUD : MonoBehaviour
             _pu.OnPowerupStart += OnStartPU;
             _pu.OnPowerupTick += OnTickPU;
             _pu.OnPowerupEnd += OnEndPU;
+        }
+        if (!badgeAnimator)
+        {
+            badgeAnimator = GetComponentInChildren<PowerupBadgeAnimator>();
         }
         // start hidden until a power-up activates
         gameObject.SetActive(false);
@@ -47,16 +54,32 @@ public class PowerupHUD : MonoBehaviour
         icon.sprite = t == PowerType.Magnet ? magnetSprite
                     : t == PowerType.Shield ? shieldSprite
                     : dashSprite;
+        if (timeTxt)
+        {
+            timeTxt.text = Mathf.CeilToInt(_pu != null ? _pu.ActiveDuration : 0f).ToString();
+        }
+
+        if (badgeAnimator && _pu != null)
+        {
+            badgeAnimator.OnPowerupStart(_pu.ActiveDuration);
+        }
+
         gameObject.SetActive(true);
     }
 
     void OnTickPU(PowerType t, float timeLeft)
     {
-        timeTxt.text = Mathf.CeilToInt(timeLeft).ToString();
+        if (timeTxt)
+        {
+            timeTxt.text = Mathf.CeilToInt(timeLeft).ToString();
+        }
+
+        badgeAnimator?.OnTick(timeLeft);
     }
 
     void OnEndPU(PowerType t)
     {
+        badgeAnimator?.OnPowerupEnd();
         gameObject.SetActive(false);
     }
 }
