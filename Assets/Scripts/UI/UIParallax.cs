@@ -1,4 +1,7 @@
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+using UnityEngine.InputSystem;
+#endif
 
 public class UIParallax : MonoBehaviour
 {
@@ -17,7 +20,11 @@ public class UIParallax : MonoBehaviour
 
     void Update()
     {
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+        Vector2 p = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+#else
         Vector2 p = Input.mousePosition;
+#endif
         Vector2 view = new Vector2(
             Screen.width > 0 ? (p.x / Screen.width - 0.5f) : 0f,
             Screen.height > 0 ? (p.y / Screen.height - 0.5f) : 0f);
