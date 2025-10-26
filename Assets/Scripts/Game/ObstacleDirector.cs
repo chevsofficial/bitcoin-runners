@@ -13,11 +13,11 @@ public class ObstacleDirector : MonoBehaviour
 
     [Header("Tuning")]
     [Tooltip("Spawn interval range, seconds. Low end used at max density.")]
-    public Vector2 spawnIntervalRange = new Vector2(0.4f, 1.8f);
+    public Vector2 spawnIntervalRange = new Vector2(0.5f, 1.6f);
     [Tooltip("Max simultaneous obstacles range. High end used at max density.")]
-    public Vector2 concurrentRange = new Vector2(2, 6);
+    public Vector2 concurrentRange = new Vector2(2, 5);
     [Tooltip("Optional probability of leaving lanes empty to reduce unfair spikes.")]
-    [Range(0f,1f)] public float minEmptyLaneChance = 0.10f;
+    [Range(0f,1f)] public float minEmptyLaneChance = 0.12f;
 
     float _t;
     int _lastConcurrent = -1;

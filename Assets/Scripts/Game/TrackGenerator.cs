@@ -16,7 +16,7 @@ public class TrackGenerator : MonoBehaviour
     [Header("Density Control")]
     [SerializeField] float spawnInterval = 1.2f;
     [SerializeField] int maxConcurrent = 4;
-    [SerializeField, Range(0f, 1f)] float minEmptyLaneChance = 0.1f;
+    [SerializeField, Range(0f, 1f)] float minEmptyLaneChance = 0.12f;
 
     float spawnedZ;
     float _spawnTimer;
