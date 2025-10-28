@@ -1,5 +1,6 @@
 ﻿// Assets/Scripts/Game/RunnerController.cs
 using UnityEngine;
+using BR.Config;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(HitRouter))]
@@ -13,7 +14,7 @@ public class RunnerController : MonoBehaviour
 
     // Lane logic
     int lane = 1; // lanes: 0 = left, 1 = mid, 2 = right
-    float laneX => (lane - 1) * cfg.laneWidth;
+    float laneX => LaneCoords.Get(lane);
     float currentX;
     float laneSwitchT;
 
@@ -57,7 +58,7 @@ public class RunnerController : MonoBehaviour
             GameEvents.LaneSwap(-1);
             AudioManager.I?.PlayLaneWhoosh();
         }
-        if (InputManager.I.Right && lane < 2)
+        if (InputManager.I.Right && lane < LaneCoords.Count - 1)
         {
             lane++;
             laneSwitchT = 0f;
