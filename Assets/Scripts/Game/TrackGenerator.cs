@@ -115,6 +115,10 @@ public class TrackGenerator : MonoBehaviour
         spawnedZ = baseZ;
 
         int laneCount = LaneCoords.Count;
+        if (laneCount == 0)
+        {
+            return false;
+        }
         int safeLane = UnityEngine.Random.Range(0, laneCount);
         float safeLaneX = LaneCoords.Get(safeLane);
 
