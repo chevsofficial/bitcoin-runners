@@ -1,5 +1,6 @@
 ﻿// Assets/Scripts/Game/RunnerController.cs
 using UnityEngine;
+using BR.Config;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(HitRouter))]
@@ -13,7 +14,7 @@ public class RunnerController : MonoBehaviour
 
     // Lane logic
     int lane = 1; // lanes: 0 = left, 1 = mid, 2 = right
-    float laneX => (lane - 1) * cfg.laneWidth;
+    float laneX => LaneCoords.Get(lane);
     float currentX;
     float laneSwitchT;
 
@@ -43,6 +44,24 @@ public class RunnerController : MonoBehaviour
         // Remember original collider settings for slide restore
         _origHeight = _cc.height;
         _origCenter = _cc.center;
+
+        // Ensure our initial lane/index aligns with the shared lane coordinates
+        int laneCount = LaneCoords.Count;
+        if (laneCount > 0)
+        {
+            lane = Mathf.Clamp(lane, 0, laneCount - 1);
+            currentX = LaneCoords.Get(lane);
+            laneSwitchT = cfg ? cfg.laneSwitchTime : 0f;
+
+            // Snap the runner to the lane center on spawn so visuals and logic match immediately
+            Vector3 pos = transform.position;
+            pos.x = currentX;
+            transform.position = pos;
+        }
+        else
+        {
+            currentX = transform.position.x;
+        }
     }
 
     void Update()
@@ -57,7 +76,7 @@ public class RunnerController : MonoBehaviour
             GameEvents.LaneSwap(-1);
             AudioManager.I?.PlayLaneWhoosh();
         }
-        if (InputManager.I.Right && lane < 2)
+        if (InputManager.I.Right && lane < LaneCoords.Count - 1)
         {
             lane++;
             laneSwitchT = 0f;

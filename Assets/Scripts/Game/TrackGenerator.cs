@@ -1,6 +1,7 @@
 // Assets/Scripts/Game/TrackGenerator.cs
 using UnityEngine;
 using System.Collections.Generic;
+using BR.Config;
 
 public class TrackGenerator : MonoBehaviour
 {
@@ -113,9 +114,13 @@ public class TrackGenerator : MonoBehaviour
         float baseZ = Mathf.Max(spawnedZ + spacing, runnerZ + lead);
         spawnedZ = baseZ;
 
-        int laneCount = cfg ? Mathf.Max(1, cfg.laneCount) : 3;
+        int laneCount = LaneCoords.Count;
+        if (laneCount == 0)
+        {
+            return false;
+        }
         int safeLane = UnityEngine.Random.Range(0, laneCount);
-        float safeLaneX = (safeLane - (laneCount - 1) * 0.5f) * cfg.laneWidth;
+        float safeLaneX = LaneCoords.Get(safeLane);
 
         bool allowObstacles = maxConcurrent != 0;
         if (allowObstacles)
@@ -151,7 +156,7 @@ public class TrackGenerator : MonoBehaviour
                     }
                 }
 
-                float laneX = (lane - (laneCount - 1) * 0.5f) * cfg.laneWidth;
+                float laneX = LaneCoords.Get(lane);
                 obs.transform.position = new Vector3(laneX, 0f, baseZ + 6f);
                 live.Add(obs);
                 _activeObstacles++;
