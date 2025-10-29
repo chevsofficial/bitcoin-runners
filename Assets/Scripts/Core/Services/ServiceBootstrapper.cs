@@ -9,6 +9,7 @@ public class ServiceBootstrapper : MonoBehaviour
     [Tooltip("Prefabs that each contain one or more service components.")]
     public GameObject[] servicePrefabs;
 
+    static ServiceBootstrapper _instance;
     static bool _bootstrapped;
 
     static readonly Type[] _requiredServices =
@@ -24,9 +25,16 @@ public class ServiceBootstrapper : MonoBehaviour
 
     void Awake()
     {
-        if (_bootstrapped)
+        if (_instance != null && _instance != this)
         {
             Destroy(gameObject);
+            return;
+        }
+
+        _instance = this;
+
+        if (_bootstrapped)
+        {
             return;
         }
 
@@ -63,9 +71,10 @@ public class ServiceBootstrapper : MonoBehaviour
 
     void OnDestroy()
     {
-        if (!_bootstrapped) return;
+        if (!_bootstrapped || _instance != this) return;
 
         _bootstrapped = false;
+        _instance = null;
         ServiceLocator.ShutdownAll();
     }
 }
