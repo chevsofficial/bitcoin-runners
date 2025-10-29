@@ -1,12 +1,11 @@
-﻿// Assets/Scripts/Core/GameManager.cs
+// Assets/Scripts/Core/GameManager.cs
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-100)] // ensure GM initializes before binders/UI
-public class GameManager : MonoBehaviour
+public class GameManager : SingletonServiceBehaviour<GameManager>
 {
-    public static GameManager I;
+    public static GameManager I => ServiceLocator.TryGet(out GameManager service) ? service : null;
 
     [Header("Config")]
     public GameConstants cfg;
@@ -32,20 +31,17 @@ public class GameManager : MonoBehaviour
 
     public void SetDistance(float d) => Distance = Mathf.Max(0f, d);
 
-    void Awake()
+    public override void Initialize()
     {
-        if (I != null) { Destroy(gameObject); return; }
-        I = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
-    void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
-    void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
-
-    void Start()
-    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
         EnsureResultsPanel();
         ResetRun();
+    }
+
+    public override void Shutdown()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        resultsPanel = null;
     }
 
     void OnSceneLoaded(Scene s, LoadSceneMode m)
@@ -186,5 +182,4 @@ public class GameManager : MonoBehaviour
         while (t.parent != null) { t = t.parent; p = t.name + "/" + p; }
         return p;
     }
-
 }
