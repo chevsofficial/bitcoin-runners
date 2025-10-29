@@ -2,15 +2,24 @@ using UnityEngine;
 using System;
 using Debug = UnityEngine.Debug;
 
-public class AdsManager : MonoBehaviour
+public class AdsManager : SingletonServiceBehaviour<AdsManager>
 {
-    public static AdsManager I;
+    public static AdsManager I => ServiceLocator.TryGet(out AdsManager service) ? service : null;
     int deathRunsSinceInterstitial = 0;
     float lastInterstitialTime = -999f;
     public int interstitialGateRuns = 2;
     public float interstitialCooldownSec = 120f;
 
-    void Awake() { if (I != null) { Destroy(gameObject); return; } I = this; DontDestroyOnLoad(gameObject); }
+    public override void Initialize()
+    {
+        deathRunsSinceInterstitial = 0;
+        lastInterstitialTime = -999f;
+    }
+
+    public override void Shutdown()
+    {
+        // nothing to clean up right now, but the explicit method satisfies the lifecycle contract
+    }
 
     public void OnRunEnded()
     {

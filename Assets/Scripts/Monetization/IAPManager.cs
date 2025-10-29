@@ -1,14 +1,21 @@
-using System.Diagnostics;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-public class IAPManager : MonoBehaviour
+public class IAPManager : SingletonServiceBehaviour<IAPManager>
 {
-    public static IAPManager I;
+    public static IAPManager I => ServiceLocator.TryGet(out IAPManager service) ? service : null;
     public bool HasRemoveAds => Prefs.RemoveAds;
     public string removeAdsProductId = "remove_ads"; // placeholder
 
-    void Awake() { if (I != null) { Destroy(gameObject); return; } I = this; DontDestroyOnLoad(gameObject); }
+    public override void Initialize()
+    {
+        // Nothing asynchronous yet, but this is where store SDK init would live.
+    }
+
+    public override void Shutdown()
+    {
+        // Placeholder for eventual store SDK disposal.
+    }
 
     public void BuyRemoveAds()
     {

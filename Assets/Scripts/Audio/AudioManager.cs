@@ -2,14 +2,14 @@
 using System.Collections;
 using UnityEngine;
 
-public class AudioManager : MonoBehaviour
+public class AudioManager : SingletonServiceBehaviour<AudioManager>
 {
     private const string MusicVolumeKey = "audio.music.volume";
     private const string SfxVolumeKey = "audio.sfx.volume";
     private const string MusicEnabledKey = "audio.music.enabled";
     private const string SfxEnabledKey = "audio.sfx.enabled";
 
-    public static AudioManager I { get; private set; }
+    public static AudioManager I => ServiceLocator.TryGet(out AudioManager service) ? service : null;
 
     [SerializeField] public AudioSource sfx, music;        // existing
     [SerializeField] public AudioSource sfxLoop;           // NEW: for magnet chain loop bed (Loop = ON)
@@ -33,33 +33,65 @@ public class AudioManager : MonoBehaviour
     public bool MusicEnabled { get; private set; } = true;
     public bool SfxEnabled { get; private set; } = true;
 
-    void Awake()
+    public override void Initialize()
     {
-        if (I != null && I != this) { Destroy(gameObject); return; }
-        I = this;
-
         if (transform.parent != null)
         {
             transform.SetParent(null);
         }
 
-        DontDestroyOnLoad(gameObject);
-
         LoadSettings();
         ApplySettings();
+        ConfigureMusicDecks();
     }
 
-    void Start()
+    public override void Shutdown()
     {
-        if (music != null && musicLoop != null)
+        StopAllCoroutines();
+        EndCoinChain();
+
+        if (music != null && music.isPlaying)
+        {
+            music.Stop();
+        }
+
+        if (musicB != null && musicB.isPlaying)
+        {
+            musicB.Stop();
+        }
+
+        if (sfxLoop != null && sfxLoop.isPlaying)
+        {
+            sfxLoop.Stop();
+        }
+    }
+
+    void ConfigureMusicDecks()
+    {
+        if (music != null)
         {
             music.clip = musicLoop;
             music.loop = true;
             music.volume = MusicVolume;
 
-            if (MusicEnabled)
+            if (MusicEnabled && music.clip != null && !music.isPlaying)
             {
                 music.Play();
+            }
+            else if (!MusicEnabled && music.isPlaying)
+            {
+                music.Stop();
+            }
+        }
+
+        if (musicB != null)
+        {
+            musicB.loop = true;
+            musicB.volume = 0f;
+
+            if (!MusicEnabled && musicB.isPlaying)
+            {
+                musicB.Stop();
             }
         }
     }

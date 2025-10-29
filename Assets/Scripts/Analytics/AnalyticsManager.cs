@@ -2,10 +2,19 @@ using UnityEngine;
 using System.Collections.Generic;
 using Debug = UnityEngine.Debug;
 
-public class AnalyticsManager : MonoBehaviour
+public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
 {
-    public static AnalyticsManager I;
-    void Awake() { if (I != null) { Destroy(gameObject); return; } I = this; DontDestroyOnLoad(gameObject); }
+    public static AnalyticsManager I => ServiceLocator.TryGet(out AnalyticsManager service) ? service : null;
+
+    public override void Initialize()
+    {
+        // No external SDK yet, but the explicit method ensures the lifecycle contract is honoured.
+    }
+
+    public override void Shutdown()
+    {
+        // Placeholder for eventual analytics SDK disposal or flushing.
+    }
 
     public void Log(string name, Dictionary<string, object> p = null)
     {

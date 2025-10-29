@@ -3,9 +3,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using ET = UnityEngine.InputSystem.EnhancedTouch;  // alias to avoid Touch ambiguity
 
-public class InputManager : MonoBehaviour
+public class InputManager : SingletonServiceBehaviour<InputManager>
 {
-    public static InputManager I;
+    public static InputManager I => ServiceLocator.TryGet(out InputManager service) ? service : null;
 
     [Header("Swipe config")]
     public float minSwipeInches = 0.25f;
@@ -21,16 +21,18 @@ public class InputManager : MonoBehaviour
     public bool Up { get; private set; }
     public bool Down { get; private set; }
 
-    void Awake()
+    public override void Initialize()
     {
-        if (I != null) { Destroy(gameObject); return; }
-        I = this;
-        DontDestroyOnLoad(gameObject);
         _dpi = Mathf.Max(1f, Screen.dpi);
+        ET.EnhancedTouchSupport.Enable();
     }
 
-    void OnEnable() { ET.EnhancedTouchSupport.Enable(); }
-    void OnDisable() { ET.EnhancedTouchSupport.Disable(); }
+    public override void Shutdown()
+    {
+        ET.EnhancedTouchSupport.Disable();
+        Left = Right = Up = Down = false;
+        _tracking = false;
+    }
 
     void Update()
     {
