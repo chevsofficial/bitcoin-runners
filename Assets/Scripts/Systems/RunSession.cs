@@ -1,13 +1,21 @@
 using UnityEngine;
 
-public class RunSession : MonoBehaviour
+public class RunSession : SingletonServiceBehaviour<RunSession>
 {
-    public static RunSession I;
+    public static RunSession I => ServiceLocator.TryGet(out RunSession service) ? service : null;
     public bool hasPendingContinue;
     public float continueDistance;
     public bool x2GrantedThisResults;
 
-    void Awake() { if (I != null) { Destroy(gameObject); return; } I = this; DontDestroyOnLoad(gameObject); }
+    public override void Initialize()
+    {
+        Clear();
+    }
+
+    public override void Shutdown()
+    {
+        Clear();
+    }
 
     public static float CheckpointStride = 150f;
     public static float LastCheckpoint(float distance)
