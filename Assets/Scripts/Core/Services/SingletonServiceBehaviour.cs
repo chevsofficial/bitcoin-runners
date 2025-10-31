@@ -17,6 +17,8 @@ public abstract class SingletonServiceBehaviour<T> : MonoBehaviour, IGameService
             return;
         }
 
+        // Ensure this object is a root before marking as persistent
+        transform.SetParent(null, worldPositionStays: true);
         DontDestroyOnLoad(gameObject);
         Initialize();
         _initialized = true;

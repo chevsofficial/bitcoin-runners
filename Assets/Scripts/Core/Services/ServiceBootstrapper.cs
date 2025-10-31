@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Simple bootstrapper that spins up the core services from a dedicated scene.
@@ -8,6 +9,9 @@ public class ServiceBootstrapper : MonoBehaviour
 {
     [Tooltip("Prefabs that each contain one or more service components.")]
     public GameObject[] servicePrefabs;
+
+    [Tooltip("Scene to load after services are up (e.g., Menu or Run).")]
+    public string firstScene = "Run"; // or "Menu"
 
     static ServiceBootstrapper _instance;
     static bool _bootstrapped;
@@ -43,6 +47,13 @@ public class ServiceBootstrapper : MonoBehaviour
 
         SpawnPrefabs();
         ValidateRequiredServices();
+        var active = SceneManager.GetActiveScene().name;
+
+        if (!string.IsNullOrEmpty(firstScene) && active != firstScene)
+        {
+            SceneManager.LoadScene(firstScene, LoadSceneMode.Single);
+        }
+
     }
 
     void SpawnPrefabs()
@@ -53,8 +64,10 @@ public class ServiceBootstrapper : MonoBehaviour
         {
             if (!prefab) continue;
 
-            var instance = Instantiate(prefab, transform);
+            // Spawn at scene root so DontDestroyOnLoad is valid
+            var instance = Instantiate(prefab);
             instance.name = prefab.name;
+
         }
     }
 
