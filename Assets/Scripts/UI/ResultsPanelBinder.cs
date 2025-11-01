@@ -6,10 +6,10 @@ public class ResultsPanelBinder : MonoBehaviour
 {
     void Awake()
     {
-        if (GameManager.I != null)
-            GameManager.I.resultsPanel = gameObject;
+        if (RunStateMachine.I != null)
+            RunStateMachine.I.RegisterResultsPanel(gameObject);
 
-        // keep panel hidden on scene load; GM will show it on death
+        // keep panel hidden on scene load; the run state machine will reveal it on death
         if (gameObject.activeSelf) gameObject.SetActive(false);
     }
 }

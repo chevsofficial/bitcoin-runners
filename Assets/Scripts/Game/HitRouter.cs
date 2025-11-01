@@ -50,14 +50,17 @@ public class HitRouter : MonoBehaviour
         // ensure UI isn’t stuck paused
         if (Time.timeScale < 0.99f) Time.timeScale = 1f;
 
-        // delegate to GameManager — it shows the ResultsController panel & sets sorting
-        if (GameManager.I != null)
+        if (RunStateMachine.I != null)
+        {
+            RunStateMachine.I.HandleRunnerDeath();
+        }
+        else if (GameManager.I != null)
         {
             GameManager.I.KillPlayer();
         }
         else
         {
-            Debug.LogError("HitRouter: GameManager.I is null; cannot show results.");
+            Debug.LogError("HitRouter: no run state machine or GameManager found; cannot resolve death state.");
         }
     }
 }

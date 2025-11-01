@@ -10,10 +10,22 @@ public class ResultsDebug : MonoBehaviour
     {
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null && Keyboard.current.kKey.wasPressedThisFrame)
-            GameManager.I?.KillPlayer();
+            TriggerResults();
 #else
         if (Input.GetKeyDown(KeyCode.K))
-            GameManager.I?.KillPlayer();
+            TriggerResults();
 #endif
+    }
+
+    void TriggerResults()
+    {
+        if (RunStateMachine.I != null)
+        {
+            RunStateMachine.I.HandleRunnerDeath();
+        }
+        else
+        {
+            GameManager.I?.KillPlayer();
+        }
     }
 }
