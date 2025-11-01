@@ -320,12 +320,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ServiceBootstrapper
   servicePrefabs:
-  - {fileID: 3296480269617001026, guid: cf525f4854509e84f8259b5ef8d77955, type: 3}
+  - {fileID: 3358672924435070153, guid: 14ffc810fcde5c240b2b94e49a6dca94, type: 3}
+  - {fileID: 5465683598553492870, guid: 8e2da4c7888c2354f8f5289d81341a83, type: 3}
   - {fileID: 6860516822965399058, guid: d2087bc13b9a94846b719747cece9e16, type: 3}
   - {fileID: 4989879067865095124, guid: 9dc43635c93eed840a439608218712ff, type: 3}
   - {fileID: 8535042612393780606, guid: 35740769e505a384991924d5067c35c9, type: 3}
   - {fileID: 4095281620414733044, guid: bd24b097e7d5a624c9f1574ebb90c97d, type: 3}
   - {fileID: 3599067379924908013, guid: ef6971b055322d64283e3009d9ed2547, type: 3}
+  - {fileID: 2515901904436145617, guid: 1d7a88124ab9e774ba763e2714acc1a9, type: 3}
+  firstScene: Run
 --- !u!4 &1052621765
 Transform:
   m_ObjectHideFlags: 0
