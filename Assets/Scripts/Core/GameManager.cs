@@ -1,6 +1,5 @@
 // Assets/Scripts/Core/GameManager.cs
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-100)] // ensure GM initializes before binders/UI
 public class GameManager : SingletonServiceBehaviour<GameManager>
@@ -11,10 +10,6 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
     public GameConstants cfg;
     [Header("Difficulty")]
     public DifficultyProfile difficulty;
-
-    [Header("UI Hooks")]
-    [Tooltip("Optional: will be auto-bound by ResultsPanelBinder in the Run scene.")]
-    public GameObject resultsPanel;
 
     [Header("Audio")]
     [Tooltip("Number of speed ramps before switching to the intense music deck (<=0 to disable).")]
@@ -33,56 +28,11 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
 
     public override void Initialize()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        EnsureResultsPanel();
         ResetRun();
     }
 
     public override void Shutdown()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        resultsPanel = null;
-    }
-
-    void OnSceneLoaded(Scene s, LoadSceneMode m)
-    {
-        var panel = EnsureResultsPanel();
-        ShowWithParents(panel, true);
-    }
-
-    // -------- Results panel resolution --------
-    GameObject EnsureResultsPanel()
-    {
-        if (resultsPanel == null)
-        {
-            ResultsController rc = null;
-#if UNITY_2021_3_OR_NEWER
-            rc = UnityEngine.Object.FindFirstObjectByType<ResultsController>(FindObjectsInactive.Include);
-#else
-            rc = FindObjectOfType<ResultsController>(true);
-#endif
-            if (rc) resultsPanel = rc.gameObject;
-            if (resultsPanel == null) resultsPanel = GameObject.Find("ResultsPanel");
-        }
-        return resultsPanel;
-    }
-
-    static void ShowWithParents(GameObject go, bool visible)
-    {
-        if (!go) return;
-        if (visible)
-        {
-            Transform t = go.transform;
-            while (t != null)
-            {
-                if (!t.gameObject.activeSelf) t.gameObject.SetActive(true);
-                t = t.parent;
-            }
-        }
-        else
-        {
-            if (go.activeSelf) go.SetActive(false);
-        }
     }
 
     // -------- Run lifecycle --------
@@ -97,10 +47,6 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
         _musicIntense = false;
 
         AudioManager.I?.CrossfadeToBase();
-
-        // Make sure the results UI is hidden at run start
-        var panel = EnsureResultsPanel();
-        ShowWithParents(panel, false);
     }
 
     public void OverrideSpeed(float s) { _manualSpeed = true; Speed = s; }
@@ -145,41 +91,8 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
         if (!Alive) return;
         Alive = false;
 
-        var panel = EnsureResultsPanel();
-        if (!panel)
-        {
-            return;
-        }
-
-        // Make visible (including all parents)
-        ShowWithParents(panel, true);
-
-        // Bring to front within its parent canvas
-        panel.transform.SetAsLastSibling();
-
-        // Ensure it is visible and can receive input
-        var cg = panel.GetComponent<CanvasGroup>();
-        if (!cg) cg = panel.AddComponent<CanvasGroup>();
-        cg.alpha = 1f;
-        cg.interactable = true;
-        cg.blocksRaycasts = true;
-
-        // Give the panel its own Canvas that overrides sorting so it draws above HUD
-        var c = panel.GetComponent<Canvas>();
-        if (!c) c = panel.AddComponent<Canvas>();
-        c.overrideSorting = true;
-        c.sortingOrder = 1000; // higher than any HUD canvas
-
         AudioManager.I?.CrossfadeToBase();
         _musicIntense = false;
 
-    }
-
-    static string PathOf(Transform t)
-    {
-        if (t == null) return "<null>";
-        string p = t.name;
-        while (t.parent != null) { t = t.parent; p = t.name + "/" + p; }
-        return p;
     }
 }
