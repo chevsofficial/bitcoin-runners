@@ -85,9 +85,22 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
         }
     }
 
-    public void SetSpawnInterval(float seconds) => spawnInterval = Mathf.Max(0.05f, seconds);
-    public void SetMaxConcurrent(int n) => maxConcurrent = Mathf.Max(0, n);
-    public void SetMinEmptyLaneChance(float p) => minEmptyLaneChance = Mathf.Clamp01(p);
+    // --- IObstacleSpawner implementation ---
+    public void SetSpawnInterval(float seconds)
+    {
+        // Clamp to a tiny minimum to avoid zero/negative intervals
+        spawnInterval = Mathf.Max(0.01f, seconds);
+    }
+
+    public void SetMaxConcurrent(int n)
+    {
+        maxConcurrent = Mathf.Max(0, n);
+    }
+
+    public void SetMinEmptyLaneChance(float p)
+    {
+        minEmptyLaneChance = Mathf.Clamp01(p);
+    }
 
     bool SpawnSegment(bool force = false)
     {

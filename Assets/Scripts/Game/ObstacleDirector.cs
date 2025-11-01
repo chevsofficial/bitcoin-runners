@@ -81,4 +81,10 @@ public class ObstacleDirector : MonoBehaviour
             Debug.LogError($"{name} spawner reference must implement {nameof(IObstacleSpawner)}", this);
         }
     }
+
+    // Allows runtime scenes to register their spawner (e.g., via ObstacleSpawnerBinder)
+    public void SetSpawner(IObstacleSpawner s)
+    {
+        _spawner = s;
+    }
 }
