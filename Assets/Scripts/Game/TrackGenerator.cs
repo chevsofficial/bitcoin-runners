@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using BR.Config;
 
-public class TrackGenerator : MonoBehaviour
+public class TrackGenerator : MonoBehaviour, IObstacleSpawner
 {
     public GameConstants cfg;
     public Transform runner;
