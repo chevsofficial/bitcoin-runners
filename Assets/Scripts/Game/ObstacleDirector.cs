@@ -9,7 +9,7 @@ public class ObstacleDirector : MonoBehaviour
     [Header("Refs")]
     public DifficultyProfile difficulty;
     public GameManager gm;         // assign GameManager.I in Awake if null
-    public MonoBehaviour spawner;  // your existing spawner component (exposes setters below)
+    [Tooltip("Component that implements IObstacleSpawner")] public MonoBehaviour spawner;  // assign TrackGenerator or similar
 
     [Header("Tuning")]
     [Tooltip("Spawn interval range, seconds. Low end used at max density.")]
@@ -22,16 +22,23 @@ public class ObstacleDirector : MonoBehaviour
     float _t;
     int _lastConcurrent = -1;
     float _lastInterval = -1f;
+    IObstacleSpawner _spawner;
 
     void Awake()
     {
         if (!gm) gm = GameManager.I;
         if (!difficulty && gm) difficulty = gm.difficulty;
+        CacheSpawnerInterface();
+    }
+
+    void OnValidate()
+    {
+        CacheSpawnerInterface();
     }
 
     void Update()
     {
-        if (gm == null || difficulty == null || spawner == null) return;
+        if (gm == null || difficulty == null || _spawner == null) return;
         _t += Time.deltaTime;
 
         // Density in [0..1]
@@ -44,15 +51,15 @@ public class ObstacleDirector : MonoBehaviour
         // Only push changes when they actually change to avoid churn
         if (!Mathf.Approximately(targetInterval, _lastInterval))
         {
-            TryCall(spawner, "SetSpawnInterval", targetInterval);
+            _spawner.SetSpawnInterval(targetInterval);
             _lastInterval = targetInterval;
         }
         if (targetConcurrent != _lastConcurrent)
         {
-            TryCall(spawner, "SetMaxConcurrent", targetConcurrent);
+            _spawner.SetMaxConcurrent(targetConcurrent);
             _lastConcurrent = targetConcurrent;
         }
-        TryCall(spawner, "SetMinEmptyLaneChance", minEmptyLaneChance);
+        _spawner.SetMinEmptyLaneChance(minEmptyLaneChance);
     }
 
     float GmStartTimeApprox()
@@ -63,9 +70,15 @@ public class ObstacleDirector : MonoBehaviour
         return 0f;
     }
 
-    static void TryCall(MonoBehaviour target, string method, object arg)
+    void CacheSpawnerInterface()
     {
-        var mi = target.GetType().GetMethod(method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-        if (mi != null) mi.Invoke(target, new[] { arg });
+        _spawner = null;
+        if (!spawner) return;
+
+        _spawner = spawner as IObstacleSpawner;
+        if (_spawner == null)
+        {
+            Debug.LogError($"{name} spawner reference must implement {nameof(IObstacleSpawner)}", this);
+        }
     }
 }
