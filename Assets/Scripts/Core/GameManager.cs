@@ -51,27 +51,26 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
 
     public void OverrideSpeed(float s) { _manualSpeed = true; Speed = s; }
 
+    public void ReleaseSpeedOverride()
+    {
+        _manualSpeed = false;
+        float elapsed = Time.time - _startTime;
+        float rampInterval = cfg ? Mathf.Max(0.0001f, cfg.rampEverySec) : 5f;
+        int ramps = Mathf.FloorToInt(elapsed / rampInterval);
+        Speed = EvaluateAutomaticSpeed(elapsed, ramps);
+    }
+
     void Update()
     {
         if (!Alive) return;
 
         float rampInterval = cfg ? Mathf.Max(0.0001f, cfg.rampEverySec) : 5f;
-        int ramps = Mathf.FloorToInt((Time.time - _startTime) / rampInterval);
+        float elapsed = Time.time - _startTime;
+        int ramps = Mathf.FloorToInt(elapsed / rampInterval);
 
         if (!_manualSpeed)
         {
-            float t = Time.time - _startTime;
-            if (difficulty)
-            {
-                Speed = difficulty.SpeedAt(t);
-            }
-            else
-            {
-                float start = cfg ? cfg.startSpeed : 6f;
-                float delta = cfg ? cfg.rampDelta : 0.5f;
-                float cap = cfg ? cfg.speedCap : 20f;
-                Speed = Mathf.Min(cap, start + ramps * delta);
-            }
+            Speed = EvaluateAutomaticSpeed(elapsed, ramps);
         }
 
         if (!_musicIntense && intenseRampThreshold > 0 && ramps >= intenseRampThreshold)
@@ -94,5 +93,18 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
         AudioManager.I?.CrossfadeToBase();
         _musicIntense = false;
 
+    }
+
+    float EvaluateAutomaticSpeed(float elapsed, int ramps)
+    {
+        if (difficulty)
+        {
+            return difficulty.SpeedAt(elapsed);
+        }
+
+        float start = cfg ? cfg.startSpeed : 6f;
+        float delta = cfg ? cfg.rampDelta : 0.5f;
+        float cap = cfg ? cfg.speedCap : 20f;
+        return Mathf.Min(cap, start + ramps * delta);
     }
 }

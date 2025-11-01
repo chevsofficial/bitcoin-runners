@@ -62,7 +62,7 @@ public class PowerupSystem : MonoBehaviour
     {
         if (Active == PowerType.Dash)
         {
-            // let ramp logic take back over next frame; no need to hard reset
+            GameManager.I?.ReleaseSpeedOverride();
             Invulnerable = false;
         }
         else if (Active == PowerType.Shield)
