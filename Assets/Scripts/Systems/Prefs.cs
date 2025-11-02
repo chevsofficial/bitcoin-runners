@@ -20,21 +20,34 @@ public static class Prefs
 
     public static bool RemoveAds
     {
-        get => PlayerPrefs.GetInt(kRemoveAds, 0) == 1;
-        set { PlayerPrefs.SetInt(kRemoveAds, value ? 1 : 0); PlayerPrefs.Save(); }
+        get
+        {
+            SaveSystem.Load();
+            return SaveSystem.Data.removeAds;
+        }
+        set
+        {
+            SaveSystem.Load();
+            if (SaveSystem.Data.removeAds == value) return;
+            SaveSystem.Data.removeAds = value;
+            SaveSystem.Save();
+        }
     }
 
     public static int BestScore
     {
-        get => PlayerPrefs.GetInt(kBestScore, 0);
+        get
+        {
+            SaveSystem.Load();
+            return SaveSystem.Data.bestScore;
+        }
         set
         {
-            // Only store if it's higher than the current best
-            int current = PlayerPrefs.GetInt(kBestScore, 0);
-            if (value > current)
+            SaveSystem.Load();
+            if (value > SaveSystem.Data.bestScore)
             {
-                PlayerPrefs.SetInt(kBestScore, value);
-                PlayerPrefs.Save();
+                SaveSystem.Data.bestScore = value;
+                SaveSystem.Save();
             }
         }
     }
