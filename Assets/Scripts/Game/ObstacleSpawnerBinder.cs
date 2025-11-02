@@ -8,7 +8,13 @@ public sealed class ObstacleSpawnerBinder : MonoBehaviour
         var spawner = GetComponent<IObstacleSpawner>();
         if (spawner == null) return;
 
-        var director = FindObjectOfType<ObstacleDirector>(true);
+                // Unity 2023.1+: use the new API. Older versions: fall back to the deprecated call.
+        
+#if UNITY_2023_1_OR_NEWER
+        var director = Object.FindFirstObjectByType<ObstacleDirector>(FindObjectsInactive.Include);
+#else
+        var director = Object.FindObjectOfType<ObstacleDirector>(true);
+#endif
         if (director != null)
         {
             director.SetSpawner(spawner);
