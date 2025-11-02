@@ -300,6 +300,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1052621765}
   - component: {fileID: 1052621764}
+  - component: {fileID: 1052621766}
   m_Layer: 0
   m_Name: ServiceBootstrapperRoot
   m_TagString: Untagged
@@ -344,6 +345,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1052621766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052621763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff976a7faf9e4b86847b74e33a89b335, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RunStateMachine
+  resultsPanelOverride: {fileID: 0}
 --- !u!1 &1647869142
 GameObject:
   m_ObjectHideFlags: 0
