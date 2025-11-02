@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+[DefaultExecutionOrder(100)]
 public sealed class ObstacleSpawnerBinder : MonoBehaviour
 {
     void Start()
