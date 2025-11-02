@@ -47,6 +47,9 @@ public class ServiceBootstrapper : MonoBehaviour
         _bootstrapped = true;
         DontDestroyOnLoad(gameObject);
 
+        // Ensure persistent save data is available before services initialize.
+        SaveSystem.Load();
+
         SpawnPrefabs();
         ValidateRequiredServices();
         var active = SceneManager.GetActiveScene().name;
