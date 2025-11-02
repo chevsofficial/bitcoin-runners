@@ -7,7 +7,8 @@ public static class SaveVersions
 {
     public const int Unknown = 0;
     public const int Initial = 1;
-    public const int Current = Initial;
+    public const int AudioSettings = 2;
+    public const int Current = AudioSettings;
 }
 
 [Serializable]
@@ -18,6 +19,8 @@ public class SaveData
     public int totalSats; // your coin bank if you keep one
     public bool removeAds;
     public float musicVol = 0.8f, sfxVol = 1.0f;
+    public bool musicEnabled = true;
+    public bool sfxEnabled = true;
     public bool runHasPendingContinue;
     public float runContinueDistance;
     public bool runX2Consumed;
@@ -28,7 +31,9 @@ public class SaveData
         {
             version = SaveVersions.Current,
             musicVol = 0.8f,
-            sfxVol = 1.0f
+            sfxVol = 1.0f,
+            musicEnabled = true,
+            sfxEnabled = true
         };
     }
 }
@@ -136,6 +141,45 @@ sealed class LegacyPlayerPrefsMigration : ISaveDataMigration
     }
 }
 
+sealed class AudioSettingsMigration : ISaveDataMigration
+{
+    const string kMusicVolume = "audio.music.volume";
+    const string kSfxVolume = "audio.sfx.volume";
+    const string kMusicEnabled = "audio.music.enabled";
+    const string kSfxEnabled = "audio.sfx.enabled";
+
+    public int FromVersion => SaveVersions.Initial;
+    public int ToVersion => SaveVersions.AudioSettings;
+
+    public SaveData Migrate(SaveData data)
+    {
+        var migrated = data ?? SaveData.CreateDefault();
+
+        if (PlayerPrefs.HasKey(kMusicVolume))
+        {
+            migrated.musicVol = Mathf.Clamp01(PlayerPrefs.GetFloat(kMusicVolume, migrated.musicVol));
+        }
+
+        if (PlayerPrefs.HasKey(kSfxVolume))
+        {
+            migrated.sfxVol = Mathf.Clamp01(PlayerPrefs.GetFloat(kSfxVolume, migrated.sfxVol));
+        }
+
+        if (PlayerPrefs.HasKey(kMusicEnabled))
+        {
+            migrated.musicEnabled = PlayerPrefs.GetInt(kMusicEnabled, migrated.musicEnabled ? 1 : 0) == 1;
+        }
+
+        if (PlayerPrefs.HasKey(kSfxEnabled))
+        {
+            migrated.sfxEnabled = PlayerPrefs.GetInt(kSfxEnabled, migrated.sfxEnabled ? 1 : 0) == 1;
+        }
+
+        migrated.version = ToVersion;
+        return migrated;
+    }
+}
+
 public static class SaveSystem
 {
     const string KEY = "save_v1";
@@ -145,7 +189,8 @@ public static class SaveSystem
     static ISaveStorage _storage = new PlayerPrefsSaveStorage(KEY);
     static readonly List<ISaveDataMigration> _migrations = new List<ISaveDataMigration>
     {
-        new LegacyPlayerPrefsMigration()
+        new LegacyPlayerPrefsMigration(),
+        new AudioSettingsMigration()
     };
 
     public static void SetStorage(ISaveStorage storage)
@@ -165,6 +210,7 @@ public static class SaveSystem
         if (_migrations.Count == 0)
         {
             _migrations.Add(new LegacyPlayerPrefsMigration());
+            _migrations.Add(new AudioSettingsMigration());
         }
 
         _loaded = false;
