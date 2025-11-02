@@ -1,21 +1,36 @@
 using UnityEngine;
+using System.Collections;
 
-[DefaultExecutionOrder(-50)] // run early so director sees the spawner before gameplay
 public sealed class ObstacleSpawnerBinder : MonoBehaviour
 {
-    void Awake()
+    void Start()
     {
         var spawner = GetComponent<IObstacleSpawner>();
         if (spawner == null) return;
+        StartCoroutine(ResolveAndBind(spawner));
+    }
 
-        var director = FindObjectOfType<ObstacleDirector>(true);
+    IEnumerator ResolveAndBind(IObstacleSpawner spawner)
+    {
+        ObstacleDirector director = null;
+        const int maxFrames = 60; // ~1 second at 60fps
+        for (int i = 0; i < maxFrames && director == null; i++)
+        {
+#if UNITY_2023_1_OR_NEWER
+            director = Object.FindFirstObjectByType<ObstacleDirector>(FindObjectsInactive.Include);
+#else
+            director = Object.FindObjectOfType<ObstacleDirector>(true);
+#endif
+            if (director == null) yield return null; // wait a frame for ServiceBootstrapper to finish
+        }
+
         if (director != null)
         {
             director.SetSpawner(spawner);
         }
         else
         {
-            Debug.LogError("[ObstacleSpawnerBinder] ObstacleDirector not found in scene/persistent objects.");
+            Debug.LogError("[ObstacleSpawnerBinder] ObstacleDirector not found after waiting ~1s. Is it spawned from Boot?");
         }
     }
 }
