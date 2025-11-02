@@ -27,6 +27,7 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
         _provider = AdsProviderFactory.Create();
         _provider.OnImpression += HandleImpression;
         _provider.OnRewardEarned += HandleRewardEarned;
+        _provider.OnRewardClosed += HandleRewardClosed;
         _provider.OnShowFailed += HandleShowFailed;
         _provider.Initialize(this);
 
@@ -40,6 +41,7 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
         {
             _provider.OnImpression -= HandleImpression;
             _provider.OnRewardEarned -= HandleRewardEarned;
+            _provider.OnRewardClosed -= HandleRewardClosed;
             _provider.OnShowFailed -= HandleShowFailed;
         }
     }
@@ -141,6 +143,15 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
         }
 
         AnalyticsManager.I?.AdReward(placement);
+    }
+
+    void HandleRewardClosed(string placement)
+    {
+        if (_pendingRewardCallback != null)
+        {
+            Debug.Log("[Ads] Rewarded video closed without granting a reward.");
+            _pendingRewardCallback = null;
+        }
     }
 
     void HandleShowFailed(string adType, string reason)
