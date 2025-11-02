@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// Simple bootstrapper that spins up the core services from a dedicated scene.
 /// </summary>
+[DefaultExecutionOrder(-100)]
 public class ServiceBootstrapper : MonoBehaviour
 {
     [Tooltip("Prefabs that each contain one or more service components.")]
@@ -65,10 +66,12 @@ public class ServiceBootstrapper : MonoBehaviour
         {
             if (!prefab) continue;
 
-            // Spawn at scene root so DontDestroyOnLoad is valid
             var instance = Instantiate(prefab);
             instance.name = prefab.name;
 
+            // Keep service instances alive across scene loads.
+            instance.transform.SetParent(null, worldPositionStays: true);
+            DontDestroyOnLoad(instance);
         }
     }
 

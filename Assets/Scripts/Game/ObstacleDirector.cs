@@ -4,11 +4,11 @@ using UnityEngine;
 /// Translates DifficultyProfile's density curve into spawn parameters,
 /// independent from player speed.
 /// </summary>
-public class ObstacleDirector : MonoBehaviour
+public class ObstacleDirector : SingletonServiceBehaviour<ObstacleDirector>
 {
     [Header("Refs")]
     public DifficultyProfile difficulty;
-    public GameManager gm;         // assign GameManager.I in Awake if null
+    public GameManager gm;         // assign GameManager.I in Initialize if null
     [Tooltip("Component that implements IObstacleSpawner")] public MonoBehaviour spawner;  // assign TrackGenerator or similar
 
     [Header("Tuning")]
@@ -24,11 +24,16 @@ public class ObstacleDirector : MonoBehaviour
     float _lastInterval = -1f;
     IObstacleSpawner _spawner;
 
-    void Awake()
+    public override void Initialize()
     {
         if (!gm) gm = GameManager.I;
         if (!difficulty && gm) difficulty = gm.difficulty;
         CacheSpawnerInterface();
+    }
+
+    public override void Shutdown()
+    {
+        _spawner = null;
     }
 
     void OnValidate()
