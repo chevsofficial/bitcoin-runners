@@ -35,6 +35,8 @@ public class ResultsController : MonoBehaviour
 
     void OnEnable()
     {
+        var session = RunSession.I;
+        _x2Consumed = session != null && session.x2GrantedThisResults;
         // Run after the panel becomes visible; wait one frame for singletons.
         StartCoroutine(RefreshNextFrame());
     }
@@ -139,11 +141,13 @@ public class ResultsController : MonoBehaviour
 
     public void OnReplay()
     {
+        RunSession.I?.Clear();
         SceneManager.LoadScene("Run");
     }
 
     public void OnHome()
     {
+        RunSession.I?.Clear();
         SceneManager.LoadScene("Menu");
     }
 
@@ -154,8 +158,13 @@ public class ResultsController : MonoBehaviour
 
         AdsManager.I?.ShowRewarded("continue_checkpoint", () =>
         {
-            RunSession.I.hasPendingContinue = true;
-            RunSession.I.continueDistance = lastCp;
+            var session = RunSession.I;
+            if (session != null)
+            {
+                session.hasPendingContinue = true;
+                session.continueDistance = lastCp;
+                session.PersistState();
+            }
             _continuedThisRun = true;
             SceneManager.LoadScene("Run");
         });
@@ -169,6 +178,12 @@ public class ResultsController : MonoBehaviour
         {
             GameManager.I.AddCoin(GameManager.I.Coins); // double
             _x2Consumed = true;
+            var session = RunSession.I;
+            if (session != null)
+            {
+                session.x2GrantedThisResults = true;
+                session.PersistState();
+            }
             if (x2Btn) x2Btn.interactable = false;
             if (coinsTxt) coinsTxt.text = GameManager.I.Coins.ToString();
             if (scoreTxt) scoreTxt.text = ScoreSystem.CalcScore().ToString();

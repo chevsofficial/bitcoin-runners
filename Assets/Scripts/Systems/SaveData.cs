@@ -7,6 +7,9 @@ public class SaveData
     public int totalSats; // your coin bank if you keep one
     public bool removeAds;
     public float musicVol = 0.8f, sfxVol = 1.0f;
+    public bool runHasPendingContinue;
+    public float runContinueDistance;
+    public bool runX2Consumed;
 }
 
 public static class SaveSystem

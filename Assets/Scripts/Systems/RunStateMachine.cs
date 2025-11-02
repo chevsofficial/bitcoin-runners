@@ -88,6 +88,7 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
         {
             RunSession.I.hasPendingContinue = false;
             RunSession.I.continueDistance = continuing ? continueDistance : 0f;
+            RunSession.I.PersistState();
         }
 
         ConfigureResultsPanel(false);
