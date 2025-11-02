@@ -15,6 +15,8 @@ public static class Prefs
     const string kBestScore = "best_score";
     const string kConsent = "ads_consent";
     const string kGdprShown = "gdpr_shown";
+    const string kAgeRestricted = "ads_age_restricted";
+    const string kDoNotSell = "ads_do_not_sell";
 
     public static bool RemoveAds
     {
@@ -49,5 +51,17 @@ public static class Prefs
     {
         get => PlayerPrefs.GetInt(kGdprShown, 0) == 1;
         set { PlayerPrefs.SetInt(kGdprShown, value ? 1 : 0); PlayerPrefs.Save(); }
+    }
+
+    public static bool AgeRestrictedAdsUser
+    {
+        get => PlayerPrefs.GetInt(kAgeRestricted, 0) == 1;
+        set { PlayerPrefs.SetInt(kAgeRestricted, value ? 1 : 0); PlayerPrefs.Save(); }
+    }
+
+    public static bool DoNotSellAdsData
+    {
+        get => PlayerPrefs.GetInt(kDoNotSell, 0) == 1;
+        set { PlayerPrefs.SetInt(kDoNotSell, value ? 1 : 0); PlayerPrefs.Save(); }
     }
 }
