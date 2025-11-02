@@ -58,8 +58,6 @@ public class ResultsController : MonoBehaviour
         int score = ScoreSystem.CalcScore();
 
         if (score > Prefs.BestScore) Prefs.BestScore = score;
-        SaveSystem.Data.bestScore = Prefs.BestScore;
-        SaveSystem.Save();
 
         if (scoreRow) scoreRow.SetActive(false);
         if (bestRow) bestRow.SetActive(false);

@@ -57,8 +57,6 @@ public class IAPManager : SingletonServiceBehaviour<IAPManager>
         if (removeAds)
         {
             Prefs.RemoveAds = true;
-            SaveSystem.Data.removeAds = true;
-            SaveSystem.Save();
         }
 
         AnalyticsManager.I?.Purchase(productId, true);
