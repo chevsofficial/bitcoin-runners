@@ -24,7 +24,8 @@ public class ServiceBootstrapper : MonoBehaviour
         typeof(AudioManager),
         typeof(AdsManager),
         typeof(IAPManager),
-        typeof(AnalyticsManager)
+        typeof(AnalyticsManager),
+        typeof(ObstacleDirector)
     };
 
     void Awake()

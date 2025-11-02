@@ -5919,7 +5919,6 @@ GameObject:
   - component: {fileID: 332973233}
   - component: {fileID: 332973232}
   - component: {fileID: 332973234}
-  - component: {fileID: 332973235}
   m_Layer: 0
   m_Name: Runner
   m_TagString: Untagged
@@ -6093,18 +6092,6 @@ MonoBehaviour:
   shieldBase: {r: 0.3, g: 0.7, b: 1, a: 1}
   shieldIntensity: 1.8
   dashSpeedLines: {fileID: 202335977}
---- !u!114 &332973235
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 332973226}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1bb9809633285d4409acb8866c0d3ae3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ObstacleSpawnerBinder
 --- !u!1 &421577970
 GameObject:
   m_ObjectHideFlags: 0
@@ -8357,6 +8344,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1414666799}
   - component: {fileID: 1414666798}
+  - component: {fileID: 1414666800}
   m_Layer: 0
   m_Name: Track
   m_TagString: Untagged
@@ -8404,6 +8392,18 @@ Transform:
   - {fileID: 1169933515}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1414666800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1414666797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bb9809633285d4409acb8866c0d3ae3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObstacleSpawnerBinder
 --- !u!1 &1416132228
 GameObject:
   m_ObjectHideFlags: 0
