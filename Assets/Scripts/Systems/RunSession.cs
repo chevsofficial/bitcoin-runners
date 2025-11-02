@@ -9,12 +9,12 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
 
     public override void Initialize()
     {
-        Clear();
+        LoadPersistedState();
     }
 
     public override void Shutdown()
     {
-        Clear();
+        PersistState();
     }
 
     public static float CheckpointStride = 150f;
@@ -23,5 +23,26 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
         return Mathf.Floor(distance / CheckpointStride) * CheckpointStride;
     }
 
-    public void Clear() { hasPendingContinue = false; x2GrantedThisResults = false; continueDistance = 0f; }
+    void LoadPersistedState()
+    {
+        hasPendingContinue = SaveSystem.Data.runHasPendingContinue;
+        continueDistance = SaveSystem.Data.runContinueDistance;
+        x2GrantedThisResults = SaveSystem.Data.runX2Consumed;
+    }
+
+    public void PersistState()
+    {
+        SaveSystem.Data.runHasPendingContinue = hasPendingContinue;
+        SaveSystem.Data.runContinueDistance = continueDistance;
+        SaveSystem.Data.runX2Consumed = x2GrantedThisResults;
+        SaveSystem.Save();
+    }
+
+    public void Clear()
+    {
+        hasPendingContinue = false;
+        x2GrantedThisResults = false;
+        continueDistance = 0f;
+        PersistState();
+    }
 }

@@ -38,7 +38,11 @@ public class RunBootstrap : MonoBehaviour
             }
 
             if (RunSession.I != null)
+            {
                 RunSession.I.hasPendingContinue = false;
+                RunSession.I.continueDistance = 0f;
+                RunSession.I.PersistState();
+            }
         }
     }
 }
