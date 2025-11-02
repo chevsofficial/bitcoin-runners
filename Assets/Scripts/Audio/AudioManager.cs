@@ -4,11 +4,6 @@ using UnityEngine;
 
 public class AudioManager : SingletonServiceBehaviour<AudioManager>
 {
-    private const string MusicVolumeKey = "audio.music.volume";
-    private const string SfxVolumeKey = "audio.sfx.volume";
-    private const string MusicEnabledKey = "audio.music.enabled";
-    private const string SfxEnabledKey = "audio.sfx.enabled";
-
     public static AudioManager I => ServiceLocator.TryGet(out AudioManager service) ? service : null;
 
     [SerializeField] public AudioSource sfx, music;        // existing
@@ -72,7 +67,7 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
         {
             music.clip = musicLoop;
             music.loop = true;
-            music.volume = MusicVolume;
+            music.volume = MusicEnabled ? MusicVolume : 0f;
 
             if (MusicEnabled && music.clip != null && !music.isPlaying)
             {
@@ -181,6 +176,7 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
         {
             if (MusicEnabled)
             {
+                music.volume = MusicVolume;
                 if (!music.isPlaying && music.clip != null)
                 {
                     music.Play();
@@ -196,6 +192,7 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
         {
             if (MusicEnabled)
             {
+                musicB.volume = Mathf.Clamp(musicB.volume, 0f, MusicVolume);
                 if (musicB.clip != null && !musicB.isPlaying && musicB.volume > 0f)
                 {
                     musicB.Play();
@@ -210,10 +207,19 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
         if (!MusicEnabled)
         {
             StopAllCoroutines();
+            if (music != null)
+            {
+                music.volume = 0f;
+            }
+            if (musicB != null)
+            {
+                musicB.volume = 0f;
+            }
         }
 
-        PlayerPrefs.SetInt(MusicEnabledKey, MusicEnabled ? 1 : 0);
-        PlayerPrefs.Save();
+        SaveSystem.Load();
+        SaveSystem.Data.musicEnabled = MusicEnabled;
+        SaveSystem.Save();
     }
 
     public void SetSfxEnabled(bool enabled)
@@ -227,8 +233,9 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
                 sfxLoop.Stop();
             }
         }
-        PlayerPrefs.SetInt(SfxEnabledKey, SfxEnabled ? 1 : 0);
-        PlayerPrefs.Save();
+        SaveSystem.Load();
+        SaveSystem.Data.sfxEnabled = SfxEnabled;
+        SaveSystem.Save();
     }
 
     public void SetMusicVolume(float volume)
@@ -241,11 +248,19 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
 
         if (musicB != null)
         {
-            musicB.volume = Mathf.Clamp(musicB.volume, 0f, MusicVolume);
+            if (musicB.isPlaying)
+            {
+                musicB.volume = MusicVolume;
+            }
+            else
+            {
+                musicB.volume = Mathf.Clamp(musicB.volume, 0f, MusicVolume);
+            }
         }
 
-        PlayerPrefs.SetFloat(MusicVolumeKey, MusicVolume);
-        PlayerPrefs.Save();
+        SaveSystem.Load();
+        SaveSystem.Data.musicVol = MusicVolume;
+        SaveSystem.Save();
     }
 
     public void SetSfxVolume(float volume)
@@ -261,13 +276,25 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
             sfxLoop.volume = 0.5f * SfxVolume;
         }
 
-        PlayerPrefs.SetFloat(SfxVolumeKey, SfxVolume);
-        PlayerPrefs.Save();
+        SaveSystem.Load();
+        SaveSystem.Data.sfxVol = SfxVolume;
+        SaveSystem.Save();
     }
 
     void Update()
     {
-        if (_chainActive && Time.time - _lastCoinTime > chainTimeout)
+        if (!_chainActive)
+        {
+            return;
+        }
+
+        if (Time.time - _lastCoinTime > chainTimeout)
+        {
+            EndCoinChain();
+            return;
+        }
+
+        if (sfxLoop == null || !sfxLoop.isPlaying)
         {
             EndCoinChain();
         }
@@ -346,17 +373,18 @@ public class AudioManager : SingletonServiceBehaviour<AudioManager>
 
     private void LoadSettings()
     {
-        MusicVolume = PlayerPrefs.GetFloat(MusicVolumeKey, 1f);
-        SfxVolume = PlayerPrefs.GetFloat(SfxVolumeKey, 1f);
-        MusicEnabled = PlayerPrefs.GetInt(MusicEnabledKey, 1) == 1;
-        SfxEnabled = PlayerPrefs.GetInt(SfxEnabledKey, 1) == 1;
+        SaveSystem.Load();
+        MusicVolume = Mathf.Clamp01(SaveSystem.Data.musicVol);
+        SfxVolume = Mathf.Clamp01(SaveSystem.Data.sfxVol);
+        MusicEnabled = SaveSystem.Data.musicEnabled;
+        SfxEnabled = SaveSystem.Data.sfxEnabled;
     }
 
     private void ApplySettings()
     {
         if (music != null)
         {
-            music.volume = MusicVolume;
+            music.volume = MusicEnabled ? MusicVolume : 0f;
             if (!MusicEnabled && music.isPlaying)
             {
                 music.Stop();
