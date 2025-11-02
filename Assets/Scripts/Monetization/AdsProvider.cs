@@ -14,6 +14,7 @@ public interface IAdsProvider
     bool IsInitialized { get; }
     event Action<string, string> OnImpression; // (adType, placement)
     event Action<string> OnRewardEarned;       // placement
+    event Action<string> OnRewardClosed;       // placement
     event Action<string, string> OnShowFailed; // (adType, reason)
 
     void Initialize(MonoBehaviour host);
@@ -82,6 +83,7 @@ internal abstract class BaseIronSourceProvider : IAdsProvider
     public bool IsInitialized { get; private set; }
     public event Action<string, string> OnImpression;
     public event Action<string> OnRewardEarned;
+    public event Action<string> OnRewardClosed;
     public event Action<string, string> OnShowFailed;
 
     public void Initialize(MonoBehaviour host)
@@ -118,6 +120,7 @@ internal abstract class BaseIronSourceProvider : IAdsProvider
     // Call these from the IronSource callbacks (e.g. OnImpressionSuccessEvent)
     protected void RaiseImpression(string adType, string placement) => OnImpression?.Invoke(adType, placement);
     protected void RaiseReward(string placement) => OnRewardEarned?.Invoke(placement);
+    protected void RaiseRewardClosed(string placement) => OnRewardClosed?.Invoke(placement);
     protected void RaiseShowFailed(string adType, string reason) => OnShowFailed?.Invoke(adType, reason);
 }
 #endif
@@ -133,6 +136,7 @@ internal sealed class StubAdsProvider : IAdsProvider
     public bool IsInitialized { get; private set; }
     public event Action<string, string> OnImpression;
     public event Action<string> OnRewardEarned;
+    public event Action<string> OnRewardClosed;
     public event Action<string, string> OnShowFailed;
 
     public void Initialize(MonoBehaviour host)
@@ -178,5 +182,6 @@ internal sealed class StubAdsProvider : IAdsProvider
         yield return null; // simulate at least one frame delay to mimic async SDK callbacks
         Debug.Log($"[Ads] (Stub) Reward earned for placement '{placement}'.");
         OnRewardEarned?.Invoke(placement);
+        OnRewardClosed?.Invoke(placement);
     }
 }
