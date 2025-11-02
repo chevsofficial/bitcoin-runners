@@ -21,8 +21,29 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
 
     float spawnedZ;
     float _spawnTimer;
-    int _activeObstacles;
     readonly List<GameObject> live = new();
+    readonly HashSet<PooledRef> activeObstacles = new();
+    readonly Dictionary<SimplePool, ObstacleInfo> obstacleMetadata = new();
+
+    readonly struct ObstacleInfo
+    {
+        public readonly ObstacleHandle.ObstacleType type;
+        public readonly string tag;
+
+        public ObstacleInfo(ObstacleHandle.ObstacleType type, string tag)
+        {
+            this.type = type;
+            this.tag = tag;
+        }
+    }
+
+    void Awake()
+    {
+        obstacleMetadata.Clear();
+        RegisterObstaclePool(barrierPool, ObstacleHandle.ObstacleType.Barrier, "ObstacleBarrier");
+        RegisterObstaclePool(lowBarPool, ObstacleHandle.ObstacleType.LowBar, "ObstacleLowBar");
+        RegisterObstaclePool(gapPool, ObstacleHandle.ObstacleType.Gap, "ObstacleGap");
+    }
 
     void Start()
     {
@@ -51,7 +72,7 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
             _spawnTimer -= interval;
 
             // If we couldn't spawn because we're at capacity, avoid tight loops
-            if (!spawned && maxConcurrent > 0 && _activeObstacles >= maxConcurrent)
+            if (!spawned && maxConcurrent > 0 && activeObstacles.Count >= maxConcurrent)
             {
                 _spawnTimer = 0f;
                 break;
@@ -64,10 +85,7 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
             var go = live[i];
             if (!go || !go.activeSelf)
             {
-                if (IsObstacle(go))
-                {
-                    _activeObstacles = Mathf.Max(0, _activeObstacles - 1);
-                }
+                UnregisterObstacle(go);
                 live.RemoveAt(i);
                 continue;
             }
@@ -75,9 +93,10 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
             if (runner && go.transform.position.z < runner.position.z - 12f)
             {
                 live.RemoveAt(i);
-                if (IsObstacle(go))
+                bool wasObstacle = IsObstacle(go);
+                if (wasObstacle)
                 {
-                    _activeObstacles = Mathf.Max(0, _activeObstacles - 1);
+                    UnregisterObstacle(go);
                     FXSpawner.BurstDebris(go.transform.position);
                 }
                 SimplePool.RecycleAny(go);
@@ -104,7 +123,7 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
 
     bool SpawnSegment(bool force = false)
     {
-        if (maxConcurrent > 0 && _activeObstacles >= maxConcurrent)
+        if (maxConcurrent > 0 && activeObstacles.Count >= maxConcurrent)
         {
             if (!force) return false;
         }
@@ -143,36 +162,26 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
             for (int lane = 0; lane < laneCount; lane++)
             {
                 if (lane == safeLane) continue;
-                if (maxConcurrent > 0 && _activeObstacles >= maxConcurrent) break;
+                if (maxConcurrent > 0 && activeObstacles.Count >= maxConcurrent) break;
                 if (UnityEngine.Random.value < minEmptyLaneChance) continue;
 
-                GameObject obs;
+                float laneX = LaneCoords.Get(lane);
+                float z = baseZ + 6f;
+
                 if (!advanced)
                 {
-                    obs = barrierPool.Get();
-                    obs.tag = "ObstacleBarrier";
+                    TrySpawnObstacle(barrierPool, laneX, z);
                 }
                 else
                 {
                     int pick = UnityEngine.Random.Range(0, 3); // 0 barrier, 1 lowbar, 2 gap
-                    if (pick == 0)
+                    SimplePool chosen = pick == 0 ? barrierPool : pick == 1 ? lowBarPool : gapPool;
+                    if (!TrySpawnObstacle(chosen, laneX, z))
                     {
-                        obs = barrierPool.Get(); obs.tag = "ObstacleBarrier";
-                    }
-                    else if (pick == 1)
-                    {
-                        obs = lowBarPool.Get(); obs.tag = "ObstacleLowBar";
-                    }
-                    else
-                    {
-                        obs = gapPool.Get(); obs.tag = "ObstacleGap";
+                        // fallback to a basic barrier if the chosen pool is empty or misconfigured
+                        TrySpawnObstacle(barrierPool, laneX, z);
                     }
                 }
-
-                float laneX = LaneCoords.Get(lane);
-                obs.transform.position = new Vector3(laneX, 0f, baseZ + 6f);
-                live.Add(obs);
-                _activeObstacles++;
             }
         }
 
@@ -204,9 +213,62 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
         return true;
     }
 
+    void RegisterObstaclePool(SimplePool pool, ObstacleHandle.ObstacleType type, string tag)
+    {
+        if (!pool) return;
+        obstacleMetadata[pool] = new ObstacleInfo(type, tag);
+    }
+
+    bool TrySpawnObstacle(SimplePool pool, float laneX, float z)
+    {
+        if (!pool)
+        {
+            Debug.LogWarning("[TrackGenerator] Obstacle pool reference missing; skipping spawn.");
+            return false;
+        }
+
+        if (!obstacleMetadata.TryGetValue(pool, out var info))
+        {
+            Debug.LogWarning($"[TrackGenerator] No obstacle metadata registered for pool '{pool.name}'.");
+            return false;
+        }
+
+        var go = pool.Get();
+        if (!go)
+        {
+            Debug.LogWarning($"[TrackGenerator] Pool '{pool.name}' failed to provide an obstacle instance.");
+            return false;
+        }
+
+        var handle = go.GetComponent<ObstacleHandle>();
+        if (!handle) handle = go.AddComponent<ObstacleHandle>();
+        handle.Configure(info.type, info.tag);
+
+        go.transform.position = new Vector3(laneX, 0f, z);
+        live.Add(go);
+
+        if (handle.BlocksLane && go.TryGetComponent(out PooledRef pooled))
+        {
+            activeObstacles.Add(pooled);
+        }
+
+        return true;
+    }
+
+    void UnregisterObstacle(GameObject go)
+    {
+        if (!go) return;
+        if (!go.TryGetComponent(out ObstacleHandle handle)) return;
+        if (!handle.BlocksLane) return;
+        if (go.TryGetComponent(out PooledRef pooled))
+        {
+            activeObstacles.Remove(pooled);
+        }
+    }
+
     static bool IsObstacle(GameObject go)
     {
         if (!go) return false;
-        return go.CompareTag("ObstacleBarrier") || go.CompareTag("ObstacleLowBar") || go.CompareTag("ObstacleGap");
+        return go.TryGetComponent(out ObstacleHandle handle) && handle.BlocksLane;
     }
 }
