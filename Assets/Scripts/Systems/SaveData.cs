@@ -153,7 +153,19 @@ sealed class AudioSettingsMigration : ISaveDataMigration
 
     public SaveData Migrate(SaveData data)
     {
-        var migrated = data ?? SaveData.CreateDefault();
+        // Start from defaults so newly introduced audio flags keep their intended values
+        // when they are absent in legacy serialized data.
+        var migrated = SaveData.CreateDefault();
+
+        if (data != null)
+        {
+            migrated.bestScore = data.bestScore;
+            migrated.totalSats = data.totalSats;
+            migrated.removeAds = data.removeAds;
+            migrated.runHasPendingContinue = data.runHasPendingContinue;
+            migrated.runContinueDistance = data.runContinueDistance;
+            migrated.runX2Consumed = data.runX2Consumed;
+        }
 
         if (PlayerPrefs.HasKey(kMusicVolume))
         {
