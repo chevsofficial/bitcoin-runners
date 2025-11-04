@@ -69,34 +69,54 @@ public class RunnerController : MonoBehaviour
         if (!GameManager.I.Alive) return;
 
         // --- Input: lane / jump / slide ---
-        if (InputManager.I.Left && lane > 0)
+        var input = InputManager.I;
+        if (input != null)
         {
-            lane--;
-            laneSwitchT = 0f;
-            GameEvents.LaneSwap(-1);
-            AudioManager.I?.PlayLaneWhoosh();
-        }
-        if (InputManager.I.Right && lane < LaneCoords.Count - 1)
-        {
-            lane++;
-            laneSwitchT = 0f;
-            GameEvents.LaneSwap(+1);
-            AudioManager.I?.PlayLaneWhoosh();
-        }
-        if (InputManager.I.Up && jumpT <= 0f && !sliding)
-        {
-            jumpT = cfg.jumpAirTime;
-            GameEvents.Jump();
-        }
+            while (input.TryDequeue(out var command))
+            {
+                switch (command)
+                {
+                    case InputManager.InputCommand.Left:
+                        if (lane > 0)
+                        {
+                            lane--;
+                            laneSwitchT = 0f;
+                            GameEvents.LaneSwap(-1);
+                            AudioManager.I?.PlayLaneWhoosh();
+                        }
+                        break;
 
-        if (InputManager.I.Down && slideT <= 0f && !sliding && jumpT <= 0f)
-        {
-            slideT = cfg.slideTime;
-            sliding = true;
-            _cc.height = 1.0f; // crouch height
-            _cc.center = new Vector3(_cc.center.x, _cc.height * 0.5f, _cc.center.z); // keep feet grounded
-            GameEvents.Slide();
-            AudioManager.I?.PlaySlideThunk();
+                    case InputManager.InputCommand.Right:
+                        if (lane < LaneCoords.Count - 1)
+                        {
+                            lane++;
+                            laneSwitchT = 0f;
+                            GameEvents.LaneSwap(+1);
+                            AudioManager.I?.PlayLaneWhoosh();
+                        }
+                        break;
+
+                    case InputManager.InputCommand.Up:
+                        if (jumpT <= 0f && !sliding)
+                        {
+                            jumpT = cfg.jumpAirTime;
+                            GameEvents.Jump();
+                        }
+                        break;
+
+                    case InputManager.InputCommand.Down:
+                        if (slideT <= 0f && !sliding && jumpT <= 0f)
+                        {
+                            slideT = cfg.slideTime;
+                            sliding = true;
+                            _cc.height = 1.0f; // crouch height
+                            _cc.center = new Vector3(_cc.center.x, _cc.height * 0.5f, _cc.center.z); // keep feet grounded
+                            GameEvents.Slide();
+                            AudioManager.I?.PlaySlideThunk();
+                        }
+                        break;
+                }
+            }
         }
 
         // --- Lane tween (ease-out cubic) ---
