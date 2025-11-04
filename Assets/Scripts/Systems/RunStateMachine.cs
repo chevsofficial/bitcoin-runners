@@ -1,5 +1,6 @@
 // Assets/Scripts/Systems/RunStateMachine.cs
 using System;
+using System.Collections;
 using UnityEngine;
 
 [DefaultExecutionOrder(-95)] // after GameManager but before ResultsPanelBinder
@@ -82,6 +83,11 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
                 var pu = runner.GetComponent<PowerupSystem>();
                 pu?.Activate(PowerType.Shield, 2f);
             }
+
+            if (gm != null)
+            {
+                StartCoroutine(ResumeAutomaticSpeedNextFrame());
+            }
         }
 
         if (RunSession.I != null)
@@ -93,6 +99,12 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
 
         ConfigureResultsPanel(false);
         TransitionTo(RunState.Running);
+    }
+
+    IEnumerator ResumeAutomaticSpeedNextFrame()
+    {
+        yield return null;
+        GameManager.I?.ReleaseSpeedOverride();
     }
 
     public void HandleRunnerDeath()
