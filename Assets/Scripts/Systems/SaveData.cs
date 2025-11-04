@@ -165,6 +165,8 @@ sealed class AudioSettingsMigration : ISaveDataMigration
             migrated.runHasPendingContinue = data.runHasPendingContinue;
             migrated.runContinueDistance = data.runContinueDistance;
             migrated.runX2Consumed = data.runX2Consumed;
+            migrated.musicVol = Mathf.Clamp01(data.musicVol);
+            migrated.sfxVol = Mathf.Clamp01(data.sfxVol);
         }
 
         if (PlayerPrefs.HasKey(kMusicVolume))
