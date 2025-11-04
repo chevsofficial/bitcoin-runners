@@ -1,5 +1,5 @@
+using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class RunBootstrap : MonoBehaviour
 {
@@ -37,6 +37,8 @@ public class RunBootstrap : MonoBehaviour
                 pu?.Activate(PowerType.Shield, 2f);
             }
 
+            StartCoroutine(ReleaseSpeedOverrideNextFrame());
+
             if (RunSession.I != null)
             {
                 RunSession.I.hasPendingContinue = false;
@@ -44,5 +46,11 @@ public class RunBootstrap : MonoBehaviour
                 RunSession.I.PersistState();
             }
         }
+    }
+
+    IEnumerator ReleaseSpeedOverrideNextFrame()
+    {
+        yield return null;
+        GameManager.I?.ReleaseSpeedOverride();
     }
 }
