@@ -57,13 +57,15 @@ public class SimplePool : MonoBehaviour
     public static void RecycleAny(GameObject go)
     {
         if (go == null) return;
+
         var pr = go.GetComponent<PooledRef>();
-            if (pr == null || pr.owner == null)
-                    {
-                        // Not a pooled instance — just destroy quietly.
+        if (pr == null || pr.owner == null)
+        {
+            // Not a pooled instance; just destroy quietly.
             UnityEngine.Object.Destroy(go);
-                        return;
-                    }
+            return;
+        }
+
         pr.owner.Recycle(go);
     }
 
@@ -89,17 +91,9 @@ public class SimplePool : MonoBehaviour
     public static void RecycleAfter(GameObject go, float delay)
     {
         if (!go) return;
-        var mb = go.GetComponent<MonoBehaviour>();
-        if (mb)
-        {
-            mb.StartCoroutine(_RecycleLater(go, delay));
-        }
-        else
-        {
-            // create a tiny host to run coroutine
-            var host = new GameObject("[PoolDelayHost]").AddComponent<PoolDelayHost>();
-            host.StartCoroutine(_RecycleLater(go, delay));
-        }
+
+        var runner = go.GetComponent<MonoBehaviour>() ?? (MonoBehaviour)SharedDelayHost;
+        runner.StartCoroutine(_RecycleLater(go, delay));
     }
 
     static System.Collections.IEnumerator _RecycleLater(GameObject go, float t)
@@ -107,6 +101,26 @@ public class SimplePool : MonoBehaviour
         yield return new WaitForSeconds(t);
         RecycleAny(go);
     }
+
+    private static PoolDelayHost SharedDelayHost
+    {
+        get
+        {
+            if (!sharedDelayHost)
+            {
+                var hostGo = new GameObject("[PoolDelayHost]")
+                {
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+                UnityEngine.Object.DontDestroyOnLoad(hostGo);
+                sharedDelayHost = hostGo.AddComponent<PoolDelayHost>();
+            }
+
+            return sharedDelayHost;
+        }
+    }
+
+    private static PoolDelayHost sharedDelayHost;
 
     private class PoolDelayHost : MonoBehaviour {}
 }
