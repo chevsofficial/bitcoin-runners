@@ -59,7 +59,7 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
             return false;
         }
 
-        if (IAPManager.I != null && IAPManager.I.HasRemoveAds) return false;
+        if (IAPManager.I?.HasRemoveAds ?? Prefs.RemoveAds) return false;
         if (_deathRunsSinceInterstitial < interstitialGateRuns) return false;
         if (Time.unscaledTime - _lastInterstitialTime < interstitialCooldownSec) return false;
 
