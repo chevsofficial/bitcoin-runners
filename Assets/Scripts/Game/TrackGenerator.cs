@@ -14,6 +14,14 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
     // NEW: powerup pools
     public SimplePool puMagnetPool, puShieldPool, puDashPool;
 
+    [Header("QA Diagnostics")]
+    [SerializeField, Tooltip("Seconds to track repeated obstacle fallbacks when pools misbehave.")]
+    float fallbackWindowSeconds = 8f;
+    [SerializeField, Tooltip("Number of fallback attempts observed inside the QA window.")]
+    int fallbackEventsInWindow;
+    [SerializeField, Tooltip("Highest fallback streak seen this session for troubleshooting.")]
+    int maxFallbackStreak;
+
     [Header("Density Control")]
     [SerializeField] float spawnInterval = 1.2f;
     [SerializeField] int maxConcurrent = 4;
@@ -24,6 +32,9 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
     readonly List<GameObject> live = new();
     readonly HashSet<PooledRef> activeObstacles = new();
     readonly Dictionary<SimplePool, ObstacleInfo> obstacleMetadata = new();
+
+    float fallbackWindowTimer;
+    const int FallbackWarningThreshold = 3;
 
     readonly struct ObstacleInfo
     {
@@ -43,6 +54,10 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
         RegisterObstaclePool(barrierPool, ObstacleHandle.ObstacleType.Barrier, "ObstacleBarrier");
         RegisterObstaclePool(lowBarPool, ObstacleHandle.ObstacleType.LowBar, "ObstacleLowBar");
         RegisterObstaclePool(gapPool, ObstacleHandle.ObstacleType.Gap, "ObstacleGap");
+
+        PrefillPowerupPool(puMagnetPool);
+        PrefillPowerupPool(puShieldPool);
+        PrefillPowerupPool(puDashPool);
     }
 
     void Start()
@@ -76,6 +91,15 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
             {
                 _spawnTimer = 0f;
                 break;
+            }
+        }
+
+        if (fallbackWindowTimer > 0f)
+        {
+            fallbackWindowTimer -= Time.deltaTime;
+            if (fallbackWindowTimer <= 0f)
+            {
+                fallbackEventsInWindow = 0;
             }
         }
 
@@ -179,6 +203,7 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
                     if (!TrySpawnObstacle(chosen, laneX, z))
                     {
                         // fallback to a basic barrier if the chosen pool is empty or misconfigured
+                        ReportObstacleFallback(chosen);
                         TrySpawnObstacle(barrierPool, laneX, z);
                     }
                 }
@@ -224,12 +249,14 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
         if (!pool)
         {
             Debug.LogWarning("[TrackGenerator] Obstacle pool reference missing; skipping spawn.");
+            ReportObstacleFallback(pool);
             return false;
         }
 
         if (!obstacleMetadata.TryGetValue(pool, out var info))
         {
             Debug.LogWarning($"[TrackGenerator] No obstacle metadata registered for pool '{pool.name}'.");
+            ReportObstacleFallback(pool);
             return false;
         }
 
@@ -237,6 +264,7 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
         if (!go)
         {
             Debug.LogWarning($"[TrackGenerator] Pool '{pool.name}' failed to provide an obstacle instance.");
+            ReportObstacleFallback(pool);
             return false;
         }
 
@@ -270,5 +298,42 @@ public class TrackGenerator : MonoBehaviour, IObstacleSpawner
     {
         if (!go) return false;
         return go.TryGetComponent(out ObstacleHandle handle) && handle.BlocksLane;
+    }
+
+    void PrefillPowerupPool(SimplePool pool)
+    {
+        if (!pool) return;
+        int target = Mathf.Max(1, pool.initial);
+        pool.Prefill(target);
+    }
+
+    void ReportObstacleFallback(SimplePool attemptedPool)
+    {
+        if (!ShouldEmitQaWarnings) return;
+
+        fallbackEventsInWindow++;
+        fallbackWindowTimer = Mathf.Max(0.5f, fallbackWindowSeconds);
+        if (fallbackEventsInWindow > maxFallbackStreak)
+        {
+            maxFallbackStreak = fallbackEventsInWindow;
+        }
+
+        if (fallbackEventsInWindow < FallbackWarningThreshold) return;
+
+        string poolName = attemptedPool ? attemptedPool.name : "<null>";
+        Debug.LogWarning($"[TrackGenerator] Fallback obstacle logic triggered {fallbackEventsInWindow} times in the last {fallbackWindowSeconds:F1}s (last attempted pool: '{poolName}'). Difficulty tuning may drift.", this);
+        fallbackEventsInWindow = 0;
+    }
+
+    static bool ShouldEmitQaWarnings
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return true;
+#else
+            return Debug.isDebugBuild;
+#endif
+        }
     }
 }

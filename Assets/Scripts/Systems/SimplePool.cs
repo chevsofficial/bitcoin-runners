@@ -11,10 +11,33 @@ public class PooledRef : MonoBehaviour
 
 public class SimplePool : MonoBehaviour
 {
+    [System.Serializable]
+    public struct PoolDiagnostics
+    {
+        public int available;
+        public int borrowed;
+        public int totalCreated;
+        public int totalBorrowed;
+        public int totalRecycled;
+        public int exhaustionEvents;
+    }
+
     public GameObject prefab;
     public int initial = 10;
 
-    private readonly Queue<GameObject> q = new();
+    [Header("Diagnostics")]
+    [SerializeField, Tooltip("Log a warning when the pool has to allocate because it ran dry.")]
+    bool warnOnExhaustion = true;
+    [SerializeField, Tooltip("Minimum seconds between exhaustion warnings to avoid log spam.")]
+    float exhaustionWarningCooldown = 5f;
+    [SerializeField, Tooltip("Runtime counters surfaced for QA/diagnostics.")]
+    PoolDiagnostics diagnostics;
+
+    readonly Queue<GameObject> q = new();
+
+    float lastExhaustionWarnTime = -999f;
+
+    public PoolDiagnostics Diagnostics => diagnostics;
 
     void Awake()
     {
@@ -24,18 +47,57 @@ public class SimplePool : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < initial; i++)
+        Prefill(initial);
+    }
+
+    public void Prefill(int desired)
+    {
+        if (prefab == null)
+        {
+            Debug.LogError($"[SimplePool] Prefab not set on {name}");
+            return;
+        }
+
+        desired = Mathf.Max(0, desired);
+
+        while (q.Count < desired)
         {
             var go = Instantiate(prefab, transform);
             AttachOwner(go);
             go.SetActive(false);
             q.Enqueue(go);
+            diagnostics.totalCreated++;
         }
+
+        diagnostics.available = q.Count;
     }
 
     public GameObject Get()
     {
-        GameObject go = q.Count > 0 ? q.Dequeue() : Instantiate(prefab, transform);
+        if (prefab == null)
+        {
+            Debug.LogError($"[SimplePool] Prefab not set on {name}");
+            return null;
+        }
+
+        GameObject go;
+        if (q.Count > 0)
+        {
+            go = q.Dequeue();
+            diagnostics.available = q.Count;
+        }
+        else
+        {
+            diagnostics.exhaustionEvents++;
+            int borrowedAfter = diagnostics.borrowed + 1;
+            MaybeWarnExhausted(borrowedAfter);
+            go = Instantiate(prefab, transform);
+            diagnostics.totalCreated++;
+        }
+
+        diagnostics.borrowed++;
+        diagnostics.totalBorrowed++;
+
         AttachOwner(go);
         go.SetActive(true);
         return go;
@@ -45,9 +107,22 @@ public class SimplePool : MonoBehaviour
     public void Recycle(GameObject go)
     {
         if (go == null) return;
+
+        var pr = go.GetComponent<PooledRef>();
+        if (pr && pr.owner != this)
+        {
+            // Hand the object back to its actual owner if we somehow received a foreign instance.
+            pr.owner?.Recycle(go);
+            return;
+        }
+
         go.SetActive(false);
         go.transform.SetParent(transform, false);
         q.Enqueue(go);
+
+        diagnostics.available = q.Count;
+        diagnostics.totalRecycled++;
+        if (diagnostics.borrowed > 0) diagnostics.borrowed--;
     }
 
     /// <summary>
@@ -61,7 +136,10 @@ public class SimplePool : MonoBehaviour
         var pr = go.GetComponent<PooledRef>();
         if (pr == null || pr.owner == null)
         {
-            // Not a pooled instance; just destroy quietly.
+            if (ShouldValidateLifecycle)
+            {
+                Debug.LogWarning($"[SimplePool] Attempted to recycle '{go.name}' but it has no owning pool; destroying.", go);
+            }
             UnityEngine.Object.Destroy(go);
             return;
         }
@@ -122,5 +200,37 @@ public class SimplePool : MonoBehaviour
 
     private static PoolDelayHost sharedDelayHost;
 
-    private class PoolDelayHost : MonoBehaviour {}
+    private class PoolDelayHost : MonoBehaviour
+    {
+        void OnDestroy()
+        {
+            if (sharedDelayHost == this)
+            {
+                sharedDelayHost = null;
+            }
+        }
+    }
+
+    static bool ShouldValidateLifecycle
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return true;
+#else
+            return Debug.isDebugBuild;
+#endif
+        }
+    }
+
+    void MaybeWarnExhausted(int borrowedAfter)
+    {
+        if (!warnOnExhaustion || !ShouldValidateLifecycle) return;
+
+        float now = Time.unscaledTime;
+        if (now - lastExhaustionWarnTime < Mathf.Max(0.1f, exhaustionWarningCooldown)) return;
+
+        lastExhaustionWarnTime = now;
+        Debug.LogWarning($"[SimplePool] Pool '{name}' exhausted; instantiating an extra instance. Consider increasing the initial size (active instances after request: {borrowedAfter}).", this);
+    }
 }
