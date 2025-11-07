@@ -19,6 +19,10 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
 
     public AdsConsentPayload CurrentConsent { get; private set; }
 
+    [Header("Stub Configuration")]
+    [Tooltip("Optional configuration asset that tunes the behaviour of the editor monetization stubs.")]
+    [SerializeField] StubMonetizationSettings stubSettings;
+
     public override void Initialize()
     {
         _deathRunsSinceInterstitial = 0;
@@ -30,6 +34,12 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
         _provider.OnRewardClosed += HandleRewardClosed;
         _provider.OnShowFailed += HandleShowFailed;
         _provider.Initialize(this);
+#if !LEVELPLAY_ENABLED && !IRONSOURCE_ENABLED
+        if (_provider is StubAdsProvider stub)
+        {
+            stub.ApplySettings(stubSettings != null ? stubSettings : StubMonetizationSettings.LoadDefault());
+        }
+#endif
 
         // Push persisted consent state down to the SDK.
         ApplyConsent(new AdsConsentPayload(Prefs.Consent, Prefs.AgeRestrictedAdsUser, Prefs.DoNotSellAdsData));

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public interface IIAPProvider
@@ -67,6 +68,9 @@ internal sealed class UnityIapProvider : IIAPProvider
 
 internal sealed class StubIapProvider : IIAPProvider
 {
+    MonoBehaviour _host;
+    StubMonetizationSettings _settings;
+
     public bool IsInitialized { get; private set; }
     public event Action<string> OnPurchaseSucceeded;
     public event Action<string, string> OnPurchaseFailed;
@@ -74,6 +78,7 @@ internal sealed class StubIapProvider : IIAPProvider
 
     public void Initialize(MonoBehaviour host, params string[] productIds)
     {
+        _host = host;
         IsInitialized = true;
         Debug.Log("[IAP] Stub provider initialized. Import Unity IAP (or another SDK) and enable UNITY_IAP_ENABLED for production builds.");
     }
@@ -86,8 +91,14 @@ internal sealed class StubIapProvider : IIAPProvider
             return;
         }
 
-        Debug.Log($"[IAP] (Stub) Purchase succeeded for product '{productId}'.");
-        OnPurchaseSucceeded?.Invoke(productId);
+        if (_settings != null && _settings.forcePurchaseFailure)
+        {
+            Debug.LogWarning($"[IAP] (Stub) Purchase forced to fail for '{productId}'.");
+            _host.StartCoroutine(RaisePurchaseFailed(productId, _settings.forcedPurchaseFailureReason));
+            return;
+        }
+
+        _host.StartCoroutine(RaisePurchaseSucceeded(productId));
     }
 
     public void RestorePurchases()
@@ -98,7 +109,72 @@ internal sealed class StubIapProvider : IIAPProvider
             return;
         }
 
+        if (_settings != null && _settings.forceRestoreFailure)
+        {
+            Debug.LogWarning("[IAP] (Stub) Restore forced to fail.");
+            _host.StartCoroutine(RaiseRestoreFailed(_settings.forcedRestoreFailureReason));
+            return;
+        }
+
+        _host.StartCoroutine(RaiseRestoreCompleted());
+    }
+
+    public void ApplySettings(StubMonetizationSettings settings)
+    {
+        _settings = settings;
+        if (_settings == null)
+        {
+            Debug.Log("[IAP] Stub settings cleared – using default behaviour.");
+        }
+        else
+        {
+            Debug.Log("[IAP] Stub settings applied – use the asset to simulate live purchasing flows.");
+        }
+    }
+
+    IEnumerator RaisePurchaseSucceeded(string productId)
+    {
+        float delay = Mathf.Max(0f, _settings?.simulatedPurchaseDelay ?? 0f);
+        if (delay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+        }
+
+        Debug.Log($"[IAP] (Stub) Purchase succeeded for product '{productId}'.");
+        OnPurchaseSucceeded?.Invoke(productId);
+    }
+
+    IEnumerator RaisePurchaseFailed(string productId, string reason)
+    {
+        float delay = Mathf.Max(0f, _settings?.simulatedPurchaseDelay ?? 0f);
+        if (delay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+        }
+
+        OnPurchaseFailed?.Invoke(productId, reason);
+    }
+
+    IEnumerator RaiseRestoreCompleted()
+    {
+        float delay = Mathf.Max(0f, _settings?.simulatedPurchaseDelay ?? 0f);
+        if (delay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+        }
+
         Debug.Log("[IAP] (Stub) Restore complete.");
         OnRestoreCompleted?.Invoke();
+    }
+
+    IEnumerator RaiseRestoreFailed(string reason)
+    {
+        float delay = Mathf.Max(0f, _settings?.simulatedPurchaseDelay ?? 0f);
+        if (delay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+        }
+
+        OnPurchaseFailed?.Invoke(string.Empty, reason);
     }
 }

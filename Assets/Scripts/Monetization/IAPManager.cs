@@ -8,6 +8,10 @@ public class IAPManager : SingletonServiceBehaviour<IAPManager>
     [Tooltip("Product identifier for the remove-ads entitlement in the live store.")]
     public string removeAdsProductId = "remove_ads";
 
+    [Header("Stub Configuration")]
+    [Tooltip("Optional configuration asset that tunes the behaviour of the editor monetization stubs.")]
+    [SerializeField] StubMonetizationSettings stubSettings;
+
     IIAPProvider _provider;
 
     public override void Initialize()
@@ -17,6 +21,12 @@ public class IAPManager : SingletonServiceBehaviour<IAPManager>
         _provider.OnPurchaseFailed += HandlePurchaseFailed;
         _provider.OnRestoreCompleted += HandleRestoreCompleted;
         _provider.Initialize(this, removeAdsProductId);
+#if !UNITY_IAP_ENABLED
+        if (_provider is StubIapProvider stub)
+        {
+            stub.ApplySettings(stubSettings != null ? stubSettings : StubMonetizationSettings.LoadDefault());
+        }
+#endif
     }
 
     public override void Shutdown()
