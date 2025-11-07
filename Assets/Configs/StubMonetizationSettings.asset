@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6621a5a94b5649a49c2f7d0d1e617bc7, type: 3}
+  m_Name: StubMonetizationSettings
+  m_EditorClassIdentifier: Assembly-CSharp::StubMonetizationSettings
+  requireAttAuthorization: 0
+  attAuthorizationGranted: 1
+  interstitialsReady: 1
+  rewardedVideosReady: 1
+  forceInterstitialFailure: 0
+  forceRewardFailure: 0
+  forcedRewardFailureReason: Simulated reward failure
+  simulatedShowDelay: 0.25
+  simulatedRewardDelay: 0.75
+  autoGrantReward: 1
+  autoCloseReward: 1
+  forcePurchaseFailure: 0
+  forcedPurchaseFailureReason: Simulated purchase failure
+  forceRestoreFailure: 0
+  forcedRestoreFailureReason: Simulated restore failure
+  simulatedPurchaseDelay: 0.25

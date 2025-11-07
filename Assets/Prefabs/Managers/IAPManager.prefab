@@ -45,3 +45,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IAPManager
   removeAdsProductId: remove_ads
+  stubSettings: {fileID: 11400000, guid: eb557f0f8d7e5884b96059e1812cf6a7, type: 2}
