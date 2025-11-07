@@ -132,6 +132,7 @@ internal abstract class BaseIronSourceProvider : IAdsProvider
 internal sealed class StubAdsProvider : IAdsProvider
 {
     MonoBehaviour _host;
+    StubMonetizationSettings _settings;
 
     public bool IsInitialized { get; private set; }
     public event Action<string, string> OnImpression;
@@ -159,8 +160,27 @@ internal sealed class StubAdsProvider : IAdsProvider
             return false;
         }
 
-        Debug.Log($"[Ads] (Stub) Interstitial shown at placement '{placement}'.");
-        OnImpression?.Invoke("interstitial", placement);
+        if (_settings == null)
+        {
+            Debug.Log($"[Ads] (Stub) Interstitial shown at placement '{placement}'.");
+            OnImpression?.Invoke("interstitial", placement);
+            return true;
+        }
+
+        if (_settings.requireAttAuthorization && !_settings.attAuthorizationGranted)
+        {
+            Debug.LogWarning("[Ads] (Stub) Interstitial blocked until ATT authorization is granted.");
+            OnShowFailed?.Invoke("interstitial", "ATT authorization missing");
+            return false;
+        }
+
+        if (!_settings.interstitialsReady)
+        {
+            Debug.LogWarning("[Ads] (Stub) Interstitial requested while availability flag is disabled.");
+            return false;
+        }
+
+        _host.StartCoroutine(SimulateInterstitialFlow(placement));
         return true;
     }
 
@@ -172,16 +192,97 @@ internal sealed class StubAdsProvider : IAdsProvider
             return false;
         }
 
+        if (_settings == null)
+        {
+            _host.StartCoroutine(SimulateRewardedFlow(placement));
+            return true;
+        }
+
+        if (_settings.requireAttAuthorization && !_settings.attAuthorizationGranted)
+        {
+            Debug.LogWarning("[Ads] (Stub) Rewarded blocked until ATT authorization is granted.");
+            OnShowFailed?.Invoke("rewarded", "ATT authorization missing");
+            return false;
+        }
+
+        if (!_settings.rewardedVideosReady)
+        {
+            Debug.LogWarning("[Ads] (Stub) Rewarded requested while availability flag is disabled.");
+            return false;
+        }
+
         _host.StartCoroutine(SimulateRewardedFlow(placement));
         return true;
     }
 
+    public void ApplySettings(StubMonetizationSettings settings)
+    {
+        _settings = settings;
+        if (_settings == null)
+        {
+            Debug.Log("[Ads] Stub settings cleared – using default behaviour.");
+        }
+        else
+        {
+            Debug.Log("[Ads] Stub settings applied – use the asset to simulate live SDK flows.");
+        }
+    }
+
+    IEnumerator SimulateInterstitialFlow(string placement)
+    {
+        float delay = Mathf.Max(0f, _settings?.simulatedShowDelay ?? 0f);
+        if (delay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+        }
+
+        if (_settings != null && _settings.forceInterstitialFailure)
+        {
+            Debug.LogWarning("[Ads] (Stub) Interstitial show failed (forced by configuration).");
+            OnShowFailed?.Invoke("interstitial", "Simulated failure");
+            yield break;
+        }
+
+        Debug.Log($"[Ads] (Stub) Interstitial shown at placement '{placement}'.");
+        OnImpression?.Invoke("interstitial", placement);
+    }
+
     IEnumerator SimulateRewardedFlow(string placement)
     {
+        float showDelay = Mathf.Max(0f, _settings?.simulatedShowDelay ?? 0f);
+        if (showDelay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(showDelay);
+        }
+
+        if (_settings != null && _settings.forceRewardFailure)
+        {
+            Debug.LogWarning("[Ads] (Stub) Rewarded show failed (forced by configuration).");
+            OnShowFailed?.Invoke("rewarded", _settings.forcedRewardFailureReason);
+            if (_settings.autoCloseReward)
+            {
+                OnRewardClosed?.Invoke(placement);
+            }
+            yield break;
+        }
+
         OnImpression?.Invoke("rewarded", placement);
-        yield return null; // simulate at least one frame delay to mimic async SDK callbacks
-        Debug.Log($"[Ads] (Stub) Reward earned for placement '{placement}'.");
-        OnRewardEarned?.Invoke(placement);
-        OnRewardClosed?.Invoke(placement);
+
+        float rewardDelay = Mathf.Max(0f, _settings?.simulatedRewardDelay ?? 0f);
+        if (rewardDelay > 0f)
+        {
+            yield return new WaitForSecondsRealtime(rewardDelay);
+        }
+
+        Debug.Log($"[Ads] (Stub) Rewarded flow finished for placement '{placement}'.");
+        if (_settings == null || _settings.autoGrantReward)
+        {
+            OnRewardEarned?.Invoke(placement);
+        }
+
+        if (_settings == null || _settings.autoCloseReward)
+        {
+            OnRewardClosed?.Invoke(placement);
+        }
     }
 }
