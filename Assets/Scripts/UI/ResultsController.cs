@@ -32,16 +32,28 @@ public class ResultsController : MonoBehaviour
 
     bool _continuedThisRun;
     bool _x2Consumed;
+    Coroutine _resultsRoutine;
 
-    void OnEnable()
+    public void BeginResultsFlow()
     {
         var session = RunSession.I;
         _x2Consumed = session != null && session.x2GrantedThisResults;
-        // Run after the panel becomes visible; wait one frame for singletons.
-        StartCoroutine(RefreshNextFrame());
+
+        if (_resultsRoutine != null)
+        {
+            StopCoroutine(_resultsRoutine);
+        }
+
+        _resultsRoutine = StartCoroutine(RunResultsSequence());
     }
 
-    IEnumerator RefreshNextFrame()
+    public void EndResultsFlow()
+    {
+        StopAllCoroutines();
+        _resultsRoutine = null;
+    }
+
+    IEnumerator RunResultsSequence()
     {
         // wait one frame to let singletons Awake
         yield return null;
@@ -91,6 +103,8 @@ public class ResultsController : MonoBehaviour
         AnalyticsManager.I?.RunEnd(distance, coins, score, _continuedThisRun);
 
         yield return StartCoroutine(RevealFlow(coins, score, Prefs.BestScore));
+
+        _resultsRoutine = null;
     }
 
     IEnumerator RevealFlow(int coins, int score, int bestScore)

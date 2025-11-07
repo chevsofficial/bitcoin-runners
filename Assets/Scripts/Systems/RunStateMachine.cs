@@ -17,46 +17,21 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
         Results
     }
 
-    [Header("Scene Hooks")]
-    [Tooltip("Optional override if the results panel cannot register itself in time.")]
-    [SerializeField] GameObject resultsPanelOverride;
-
     public RunState CurrentState { get; private set; } = RunState.None;
 
     public event Action<RunState, RunState> StateChanged;
     public event Action<RunState> StateEntered;
 
-    GameObject _resultsPanel;
-    CanvasGroup _resultsCanvasGroup;
-    Canvas _resultsCanvas;
-
     public override void Initialize()
     {
-        _resultsPanel = resultsPanelOverride;
-        CachePanelComponents();
         CurrentState = RunState.None;
-        ConfigureResultsPanel(false);
     }
 
     public override void Shutdown()
     {
         StateChanged = null;
         StateEntered = null;
-        _resultsPanel = null;
-        _resultsCanvas = null;
-        _resultsCanvasGroup = null;
         CurrentState = RunState.None;
-    }
-
-    public void RegisterResultsPanel(GameObject panel)
-    {
-        if (!panel) return;
-
-        _resultsPanel = panel;
-        CachePanelComponents();
-
-        bool shouldShow = CurrentState == RunState.Results || CurrentState == RunState.Dead;
-        ConfigureResultsPanel(shouldShow);
     }
 
     public void BeginRun(RunnerController runner, bool continuing, float continueDistance)
@@ -97,7 +72,6 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
             RunSession.I.PersistState();
         }
 
-        ConfigureResultsPanel(false);
         TransitionTo(RunState.Running);
     }
 
@@ -118,93 +92,7 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
             Time.timeScale = 1f;
 
         TransitionTo(RunState.Dead);
-        ConfigureResultsPanel(true);
         TransitionTo(RunState.Results);
-    }
-
-    void ConfigureResultsPanel(bool visible)
-    {
-        if (!ResolveResultsPanel()) return;
-
-        if (visible)
-        {
-            Transform t = _resultsPanel.transform;
-            while (t != null)
-            {
-                if (!t.gameObject.activeSelf)
-                    t.gameObject.SetActive(true);
-                t = t.parent;
-            }
-
-            _resultsPanel.transform.SetAsLastSibling();
-
-            if (_resultsCanvasGroup == null)
-                _resultsCanvasGroup = _resultsPanel.GetComponent<CanvasGroup>();
-            if (_resultsCanvasGroup == null)
-                _resultsCanvasGroup = _resultsPanel.AddComponent<CanvasGroup>();
-
-            _resultsCanvasGroup.alpha = 1f;
-            _resultsCanvasGroup.interactable = true;
-            _resultsCanvasGroup.blocksRaycasts = true;
-
-            if (_resultsCanvas == null)
-                _resultsCanvas = _resultsPanel.GetComponent<Canvas>();
-            if (_resultsCanvas == null)
-                _resultsCanvas = _resultsPanel.AddComponent<Canvas>();
-
-            _resultsCanvas.overrideSorting = true;
-            _resultsCanvas.sortingOrder = 1000;
-        }
-        else
-        {
-            if (_resultsCanvasGroup != null)
-            {
-                _resultsCanvasGroup.alpha = 0f;
-                _resultsCanvasGroup.interactable = false;
-                _resultsCanvasGroup.blocksRaycasts = false;
-            }
-
-            if (_resultsPanel.activeSelf)
-                _resultsPanel.SetActive(false);
-        }
-    }
-
-    bool ResolveResultsPanel()
-    {
-        if (_resultsPanel)
-            return true;
-
-        if (resultsPanelOverride)
-        {
-            _resultsPanel = resultsPanelOverride;
-            CachePanelComponents();
-            return _resultsPanel != null;
-        }
-
-#if UNITY_2021_3_OR_NEWER
-        var rc = UnityEngine.Object.FindFirstObjectByType<ResultsController>(FindObjectsInactive.Include);
-#else
-        var rc = UnityEngine.Object.FindObjectOfType<ResultsController>(true);
-#endif
-        if (rc)
-        {
-            RegisterResultsPanel(rc.gameObject);
-        }
-
-        return _resultsPanel != null;
-    }
-
-    void CachePanelComponents()
-    {
-        if (!_resultsPanel)
-        {
-            _resultsCanvasGroup = null;
-            _resultsCanvas = null;
-            return;
-        }
-
-        _resultsCanvasGroup = _resultsPanel.GetComponent<CanvasGroup>();
-        _resultsCanvas = _resultsPanel.GetComponent<Canvas>();
     }
 
     void TransitionTo(RunState next)
