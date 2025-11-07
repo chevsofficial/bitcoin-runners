@@ -36,12 +36,14 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
     AutoResetEvent _queueSignal;
     CancellationTokenSource _dispatchCancellation;
     Task _dispatchTask;
+    SynchronizationContext _unityContext;
     string _sessionId;
     bool _isShuttingDown;
     int _eventsSent;
     int _eventsFailed;
     int _eventsDropped;
     double _lastLatencyMs;
+    long _nextEventSequence;
 
     bool ShouldSendEvents => !string.IsNullOrEmpty(endpointUrl) && (!Application.isEditor || sendInEditor);
     string PersistencePath => Path.Combine(Application.persistentDataPath, persistenceFileName);
@@ -49,7 +51,9 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
 
     public override void Initialize()
     {
+        _unityContext = SynchronizationContext.Current;
         _sessionId = Guid.NewGuid().ToString("N");
+        _nextEventSequence = 0;
         LoadPersistedQueue();
         _queueSignal = new AutoResetEvent(false);
         _dispatchCancellation = new CancellationTokenSource();
@@ -88,7 +92,7 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
 
     public void Log(string name, Dictionary<string, object> parameters = null)
     {
-        var evt = new AnalyticsEvent(name, parameters, _sessionId);
+        var evt = new AnalyticsEvent(name, parameters, _sessionId, sequenceId: GetNextSequenceId());
 
         lock (_syncRoot)
         {
@@ -127,6 +131,8 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
 
     public void PowerupStart(string type, float duration) =>
         Log("powerup_start", new() { { "type", type }, { "duration", duration } });
+
+    long GetNextSequenceId() => Interlocked.Increment(ref _nextEventSequence);
 
     void DispatchLoop(CancellationToken token)
     {
@@ -173,7 +179,7 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
             {
                 lock (_syncRoot)
                 {
-                    if (_pendingEvents.Count > 0)
+                    if (_pendingEvents.Count > 0 && _pendingEvents.Peek().SequenceId == nextEvent.Value.SequenceId)
                     {
                         _pendingEvents.Dequeue();
                     }
@@ -280,7 +286,7 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
                     parameters[key] = value;
                 }
 
-                var evt = new AnalyticsEvent(name, parameters, sessionId, timestamp);
+                var evt = new AnalyticsEvent(name, parameters, sessionId, timestamp, sequenceId: GetNextSequenceId());
                 _pendingEvents.Enqueue(evt);
             }
         }
@@ -413,7 +419,27 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
 
     void RaiseMetricsChanged()
     {
-        onMetricsUpdated?.Invoke(GetSnapshot());
+        var handler = onMetricsUpdated;
+        if (handler == null)
+        {
+            return;
+        }
+
+        AnalyticsTransportSnapshot snapshot = GetSnapshot();
+        SynchronizationContext context = _unityContext;
+
+        if (context != null && SynchronizationContext.Current != context)
+        {
+            context.Post(static state =>
+            {
+                var payload = ((AnalyticsTransportSnapshotEvent handler, AnalyticsTransportSnapshot snapshot))state;
+                payload.handler?.Invoke(payload.snapshot);
+            }, (handler, snapshot));
+        }
+        else
+        {
+            handler.Invoke(snapshot);
+        }
     }
 
     public AnalyticsTransportSnapshot GetSnapshot()
@@ -440,13 +466,15 @@ readonly struct AnalyticsEvent
     public Dictionary<string, object> Parameters { get; }
     public long TimestampUtcMs { get; }
     public string SessionId { get; }
+    public long SequenceId { get; }
 
-    public AnalyticsEvent(string name, Dictionary<string, object> parameters, string sessionId, long? timestampUtcMs = null)
+    public AnalyticsEvent(string name, Dictionary<string, object> parameters, string sessionId, long? timestampUtcMs = null, long? sequenceId = null)
     {
         Name = name;
         Parameters = parameters != null ? new Dictionary<string, object>(parameters) : new Dictionary<string, object>();
         TimestampUtcMs = timestampUtcMs ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         SessionId = sessionId;
+        SequenceId = sequenceId ?? 0;
     }
 
     public Dictionary<string, object> ToDictionary()
