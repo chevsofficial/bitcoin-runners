@@ -218,7 +218,7 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
         try
         {
             var stopwatch = Stopwatch.StartNew();
-            HttpResponseMessage response = HttpClient.PostAsync(endpointUrl, content, token).GetAwaiter().GetResult();
+            using HttpResponseMessage response = HttpClient.PostAsync(endpointUrl, content, token).GetAwaiter().GetResult();
             stopwatch.Stop();
             latencyMs = stopwatch.Elapsed.TotalMilliseconds;
 
