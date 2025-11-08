@@ -6,6 +6,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
     public bool hasPendingContinue;
     public float continueDistance;
     public float continueElapsed;
+    public int continueCoins;
     public bool x2GrantedThisResults;
 
     public override void Initialize()
@@ -29,6 +30,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
         hasPendingContinue = SaveSystem.Data.runHasPendingContinue;
         continueDistance = SaveSystem.Data.runContinueDistance;
         continueElapsed = SaveSystem.Data.runContinueElapsed;
+        continueCoins = SaveSystem.Data.runContinueCoins;
         x2GrantedThisResults = SaveSystem.Data.runX2Consumed;
     }
 
@@ -37,6 +39,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
         SaveSystem.Data.runHasPendingContinue = hasPendingContinue;
         SaveSystem.Data.runContinueDistance = continueDistance;
         SaveSystem.Data.runContinueElapsed = continueElapsed;
+        SaveSystem.Data.runContinueCoins = continueCoins;
         SaveSystem.Data.runX2Consumed = x2GrantedThisResults;
         SaveSystem.Save();
     }
@@ -47,6 +50,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
         x2GrantedThisResults = false;
         continueDistance = 0f;
         continueElapsed = 0f;
+        continueCoins = 0;
         PersistState();
     }
 }

@@ -39,6 +39,7 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
         TransitionTo(RunState.Bootstrapping);
 
         var gm = GameManager.I;
+        var session = RunSession.I;
         gm?.ResetRun();
 
         if (continuing)
@@ -48,6 +49,10 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
                 float startSpeed = gm.cfg ? gm.cfg.startSpeed : gm.Speed;
                 gm.OverrideSpeed(startSpeed);
                 gm.RestoreRunProgress(continueDistance, continueElapsed);
+                if (session != null)
+                {
+                    gm.SetCoins(session.continueCoins);
+                }
             }
 
             if (runner != null)
@@ -65,17 +70,18 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
             }
         }
 
-        if (RunSession.I != null)
+        if (session != null)
         {
-            if (!continuing && RunSession.I.x2GrantedThisResults)
+            if (!continuing && session.x2GrantedThisResults)
             {
-                RunSession.I.x2GrantedThisResults = false;
+                session.x2GrantedThisResults = false;
             }
 
-            RunSession.I.hasPendingContinue = false;
-            RunSession.I.continueDistance = continuing ? continueDistance : 0f;
-            RunSession.I.continueElapsed = continuing ? continueElapsed : 0f;
-            RunSession.I.PersistState();
+            session.hasPendingContinue = false;
+            session.continueDistance = continuing ? continueDistance : 0f;
+            session.continueElapsed = continuing ? continueElapsed : 0f;
+            session.continueCoins = continuing ? session.continueCoins : 0;
+            session.PersistState();
         }
 
         TransitionTo(RunState.Running);

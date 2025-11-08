@@ -10,6 +10,7 @@ public class RunBootstrap : MonoBehaviour
         bool continuing = RunSession.I && RunSession.I.hasPendingContinue;
         float continueDistance = continuing ? RunSession.I.continueDistance : 0f;
         float continueElapsed = continuing ? RunSession.I.continueElapsed : 0f;
+        int continueCoins = continuing ? RunSession.I.continueCoins : 0;
 
         // Find the runner (new API on 2023.1+, old API otherwise)
 #if UNITY_2023_1_OR_NEWER
@@ -28,6 +29,7 @@ public class RunBootstrap : MonoBehaviour
             GameManager.I.ResetRun();
             GameManager.I.OverrideSpeed(GameManager.I.cfg.startSpeed);
             GameManager.I.RestoreRunProgress(continueDistance, continueElapsed);
+            GameManager.I.SetCoins(continueCoins);
 
             if (runner)
             {
@@ -45,6 +47,7 @@ public class RunBootstrap : MonoBehaviour
                 RunSession.I.hasPendingContinue = false;
                 RunSession.I.continueDistance = 0f;
                 RunSession.I.continueElapsed = 0f;
+                RunSession.I.continueCoins = 0;
                 RunSession.I.PersistState();
             }
         }

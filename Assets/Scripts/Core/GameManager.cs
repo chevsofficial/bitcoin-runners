@@ -90,6 +90,11 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
         Distance += Speed * Time.deltaTime;
     }
 
+    public void SetCoins(int amount)
+    {
+        Coins = Mathf.Max(0, amount);
+    }
+
     public void AddCoin(int n = 1) { Coins += n; }
 
     public void PlayerDied() => KillPlayer();
