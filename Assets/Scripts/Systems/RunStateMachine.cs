@@ -67,6 +67,11 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
 
         if (RunSession.I != null)
         {
+            if (!continuing && RunSession.I.x2GrantedThisResults)
+            {
+                RunSession.I.x2GrantedThisResults = false;
+            }
+
             RunSession.I.hasPendingContinue = false;
             RunSession.I.continueDistance = continuing ? continueDistance : 0f;
             RunSession.I.continueElapsed = continuing ? continueElapsed : 0f;

@@ -51,6 +51,13 @@ public class ResultsController : MonoBehaviour
     {
         StopAllCoroutines();
         _resultsRoutine = null;
+
+        var session = RunSession.I;
+        if (session != null && session.x2GrantedThisResults)
+        {
+            session.x2GrantedThisResults = false;
+            session.PersistState();
+        }
     }
 
     IEnumerator RunResultsSequence()
