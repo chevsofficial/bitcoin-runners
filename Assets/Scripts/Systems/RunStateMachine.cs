@@ -34,7 +34,7 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
         CurrentState = RunState.None;
     }
 
-    public void BeginRun(RunnerController runner, bool continuing, float continueDistance)
+    public void BeginRun(RunnerController runner, bool continuing, float continueDistance, float continueElapsed)
     {
         TransitionTo(RunState.Bootstrapping);
 
@@ -47,7 +47,7 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
             {
                 float startSpeed = gm.cfg ? gm.cfg.startSpeed : gm.Speed;
                 gm.OverrideSpeed(startSpeed);
-                gm.SetDistance(continueDistance);
+                gm.RestoreRunProgress(continueDistance, continueElapsed);
             }
 
             if (runner != null)
@@ -69,6 +69,7 @@ public class RunStateMachine : SingletonServiceBehaviour<RunStateMachine>
         {
             RunSession.I.hasPendingContinue = false;
             RunSession.I.continueDistance = continuing ? continueDistance : 0f;
+            RunSession.I.continueElapsed = continuing ? continueElapsed : 0f;
             RunSession.I.PersistState();
         }
 
