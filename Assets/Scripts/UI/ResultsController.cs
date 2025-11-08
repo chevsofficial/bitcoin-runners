@@ -184,6 +184,7 @@ public class ResultsController : MonoBehaviour
                 session.continueDistance = lastCp;
                 var gm = GameManager.I;
                 session.continueElapsed = gm != null ? gm.RunElapsed : 0f;
+                session.continueCoins = gm != null ? gm.Coins : 0;
                 session.PersistState();
             }
             _continuedThisRun = true;
