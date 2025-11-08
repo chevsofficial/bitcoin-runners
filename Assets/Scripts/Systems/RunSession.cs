@@ -5,6 +5,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
     public static RunSession I => ServiceLocator.TryGet(out RunSession service) ? service : null;
     public bool hasPendingContinue;
     public float continueDistance;
+    public float continueElapsed;
     public bool x2GrantedThisResults;
 
     public override void Initialize()
@@ -27,6 +28,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
     {
         hasPendingContinue = SaveSystem.Data.runHasPendingContinue;
         continueDistance = SaveSystem.Data.runContinueDistance;
+        continueElapsed = SaveSystem.Data.runContinueElapsed;
         x2GrantedThisResults = SaveSystem.Data.runX2Consumed;
     }
 
@@ -34,6 +36,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
     {
         SaveSystem.Data.runHasPendingContinue = hasPendingContinue;
         SaveSystem.Data.runContinueDistance = continueDistance;
+        SaveSystem.Data.runContinueElapsed = continueElapsed;
         SaveSystem.Data.runX2Consumed = x2GrantedThisResults;
         SaveSystem.Save();
     }
@@ -43,6 +46,7 @@ public class RunSession : SingletonServiceBehaviour<RunSession>
         hasPendingContinue = false;
         x2GrantedThisResults = false;
         continueDistance = 0f;
+        continueElapsed = 0f;
         PersistState();
     }
 }

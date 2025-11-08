@@ -9,6 +9,7 @@ public class RunBootstrap : MonoBehaviour
 
         bool continuing = RunSession.I && RunSession.I.hasPendingContinue;
         float continueDistance = continuing ? RunSession.I.continueDistance : 0f;
+        float continueElapsed = continuing ? RunSession.I.continueElapsed : 0f;
 
         // Find the runner (new API on 2023.1+, old API otherwise)
 #if UNITY_2023_1_OR_NEWER
@@ -19,14 +20,14 @@ public class RunBootstrap : MonoBehaviour
 
         if (RunStateMachine.I != null)
         {
-            RunStateMachine.I.BeginRun(runner, continuing, continueDistance);
+            RunStateMachine.I.BeginRun(runner, continuing, continueDistance, continueElapsed);
         }
         else if (continuing)
         {
             // Fallback to legacy behaviour if the run state machine is unavailable.
             GameManager.I.ResetRun();
             GameManager.I.OverrideSpeed(GameManager.I.cfg.startSpeed);
-            GameManager.I.SetDistance(continueDistance);
+            GameManager.I.RestoreRunProgress(continueDistance, continueElapsed);
 
             if (runner)
             {
@@ -43,6 +44,7 @@ public class RunBootstrap : MonoBehaviour
             {
                 RunSession.I.hasPendingContinue = false;
                 RunSession.I.continueDistance = 0f;
+                RunSession.I.continueElapsed = 0f;
                 RunSession.I.PersistState();
             }
         }

@@ -23,6 +23,7 @@ public class SaveData
     public bool sfxEnabled = true;
     public bool runHasPendingContinue;
     public float runContinueDistance;
+    public float runContinueElapsed;
     public bool runX2Consumed;
 
     public static SaveData CreateDefault()
@@ -164,6 +165,7 @@ sealed class AudioSettingsMigration : ISaveDataMigration
             migrated.removeAds = data.removeAds;
             migrated.runHasPendingContinue = data.runHasPendingContinue;
             migrated.runContinueDistance = data.runContinueDistance;
+            migrated.runContinueElapsed = data.runContinueElapsed;
             migrated.runX2Consumed = data.runX2Consumed;
             migrated.musicVol = Mathf.Clamp01(data.musicVol);
             migrated.sfxVol = Mathf.Clamp01(data.sfxVol);

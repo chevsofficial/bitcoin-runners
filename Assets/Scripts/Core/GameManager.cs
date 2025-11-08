@@ -26,6 +26,8 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
 
     public void SetDistance(float d) => Distance = Mathf.Max(0f, d);
 
+    public float RunElapsed => Time.time - _startTime;
+
     public override void Initialize()
     {
         ResetRun();
@@ -58,6 +60,13 @@ public class GameManager : SingletonServiceBehaviour<GameManager>
         float rampInterval = cfg ? Mathf.Max(0.0001f, cfg.rampEverySec) : 5f;
         int ramps = Mathf.FloorToInt(elapsed / rampInterval);
         Speed = EvaluateAutomaticSpeed(elapsed, ramps);
+    }
+
+    public void RestoreRunProgress(float distance, float elapsedSeconds)
+    {
+        SetDistance(distance);
+        float clampedElapsed = Mathf.Max(0f, elapsedSeconds);
+        _startTime = Time.time - clampedElapsed;
     }
 
     void Update()

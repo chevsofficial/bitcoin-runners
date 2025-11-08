@@ -175,6 +175,8 @@ public class ResultsController : MonoBehaviour
             {
                 session.hasPendingContinue = true;
                 session.continueDistance = lastCp;
+                var gm = GameManager.I;
+                session.continueElapsed = gm != null ? gm.RunElapsed : 0f;
                 session.PersistState();
             }
             _continuedThisRun = true;
