@@ -7,10 +7,14 @@ public class RunBootstrap : MonoBehaviour
     {
         AnalyticsManager.I?.RunStart();
 
-        bool continuing = RunSession.I && RunSession.I.hasPendingContinue;
-        float continueDistance = continuing ? RunSession.I.continueDistance : 0f;
-        float continueElapsed = continuing ? RunSession.I.continueElapsed : 0f;
-        int continueCoins = continuing ? RunSession.I.continueCoins : 0;
+        var runSession = RunSession.I;
+        var runStateMachine = RunStateMachine.I;
+        var gameManager = GameManager.I;
+
+        bool continuing = runSession != null && runSession.hasPendingContinue;
+        float continueDistance = continuing ? runSession.continueDistance : 0f;
+        float continueElapsed = continuing ? runSession.continueElapsed : 0f;
+        int continueCoins = continuing ? runSession.continueCoins : 0;
 
         // Find the runner (new API on 2023.1+, old API otherwise)
 #if UNITY_2023_1_OR_NEWER
@@ -19,17 +23,25 @@ public class RunBootstrap : MonoBehaviour
         var runner = FindObjectOfType<RunnerController>();
 #endif
 
-        if (RunStateMachine.I != null)
+        if (runStateMachine != null)
         {
-            RunStateMachine.I.BeginRun(runner, continuing, continueDistance, continueElapsed);
+            runStateMachine.BeginRun(runner, continuing, continueDistance, continueElapsed);
         }
         else if (continuing)
         {
+            Debug.LogError("RunBootstrap: RunStateMachine service is not available; using legacy continue flow.");
+
             // Fallback to legacy behaviour if the run state machine is unavailable.
-            GameManager.I.ResetRun();
-            GameManager.I.OverrideSpeed(GameManager.I.cfg.startSpeed);
-            GameManager.I.RestoreRunProgress(continueDistance, continueElapsed);
-            GameManager.I.SetCoins(continueCoins);
+            if (gameManager == null)
+            {
+                Debug.LogError("RunBootstrap: GameManager service is required for legacy continue handling but is unavailable.");
+                return;
+            }
+
+            gameManager.ResetRun();
+            gameManager.OverrideSpeed(gameManager.cfg.startSpeed);
+            gameManager.RestoreRunProgress(continueDistance, continueElapsed);
+            gameManager.SetCoins(continueCoins);
 
             if (runner)
             {
@@ -40,22 +52,37 @@ public class RunBootstrap : MonoBehaviour
                 pu?.Activate(PowerType.Shield, 2f);
             }
 
-            StartCoroutine(ReleaseSpeedOverrideNextFrame());
+            StartCoroutine(ReleaseSpeedOverrideNextFrame(gameManager));
 
-            if (RunSession.I != null)
+            if (runSession != null)
             {
-                RunSession.I.hasPendingContinue = false;
-                RunSession.I.continueDistance = 0f;
-                RunSession.I.continueElapsed = 0f;
-                RunSession.I.continueCoins = 0;
-                RunSession.I.PersistState();
+                runSession.hasPendingContinue = false;
+                runSession.continueDistance = 0f;
+                runSession.continueElapsed = 0f;
+                runSession.continueCoins = 0;
+                runSession.PersistState();
             }
+            else
+            {
+                Debug.LogError("RunBootstrap: Unable to persist continue state because RunSession service is unavailable.");
+            }
+        }
+        else
+        {
+            Debug.LogError("RunBootstrap: RunStateMachine service is not available; cannot start run.");
         }
     }
 
-    IEnumerator ReleaseSpeedOverrideNextFrame()
+    IEnumerator ReleaseSpeedOverrideNextFrame(GameManager gameManager)
     {
         yield return null;
-        GameManager.I?.ReleaseSpeedOverride();
+        if (gameManager != null)
+        {
+            gameManager.ReleaseSpeedOverride();
+        }
+        else
+        {
+            Debug.LogError("RunBootstrap: Unable to release speed override because GameManager service is unavailable.");
+        }
     }
 }
