@@ -29,6 +29,12 @@ public class AdsManager : SingletonServiceBehaviour<AdsManager>
         _lastInterstitialTime = -999f;
 
         _provider = AdsProviderFactory.Create();
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        if (_provider is StubAdsProvider)
+        {
+            throw new InvalidOperationException("Stub ads provider selected for a release build. Enable a production-ready mediation SDK.");
+        }
+#endif
         _provider.OnImpression += HandleImpression;
         _provider.OnRewardEarned += HandleRewardEarned;
         _provider.OnRewardClosed += HandleRewardClosed;

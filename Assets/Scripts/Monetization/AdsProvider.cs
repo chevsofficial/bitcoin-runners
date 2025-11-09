@@ -61,7 +61,11 @@ public static class AdsProviderFactory
 #elif IRONSOURCE_ENABLED
         return new IronSourceAdsProvider();
 #else
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        throw new InvalidOperationException("Stub ads provider selected for a release build. Enable a production-ready mediation SDK.");
+#else
         return new StubAdsProvider();
+#endif
 #endif
     }
 }
