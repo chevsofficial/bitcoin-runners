@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -17,6 +18,12 @@ public class IAPManager : SingletonServiceBehaviour<IAPManager>
     public override void Initialize()
     {
         _provider = IAPProviderFactory.Create();
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+        if (_provider is StubIapProvider)
+        {
+            throw new InvalidOperationException("Stub IAP provider selected for a release build. Enable a production-ready billing SDK.");
+        }
+#endif
         _provider.OnPurchaseSucceeded += HandlePurchaseSucceeded;
         _provider.OnPurchaseFailed += HandlePurchaseFailed;
         _provider.OnRestoreCompleted += HandleRestoreCompleted;
