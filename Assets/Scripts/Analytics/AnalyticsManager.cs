@@ -39,13 +39,28 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
     SynchronizationContext _unityContext;
     string _sessionId;
     bool _isShuttingDown;
+    bool _transportSupported = true;
+    bool _transportWarningLogged;
+    string _transportDisableReason;
     int _eventsSent;
     int _eventsFailed;
     int _eventsDropped;
     double _lastLatencyMs;
     long _nextEventSequence;
 
-    bool ShouldSendEvents => !string.IsNullOrEmpty(endpointUrl) && (!Application.isEditor || sendInEditor);
+    bool ShouldSendEvents
+    {
+        get
+        {
+            if (!_transportSupported)
+            {
+                LogTransportDisabledWarning();
+                return false;
+            }
+
+            return !string.IsNullOrEmpty(endpointUrl) && (!Application.isEditor || sendInEditor);
+        }
+    }
     string PersistencePath => Path.Combine(Application.persistentDataPath, persistenceFileName);
     static readonly HttpClient HttpClient = new();
 
@@ -54,10 +69,22 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
         _unityContext = SynchronizationContext.Current;
         _sessionId = Guid.NewGuid().ToString("N");
         _nextEventSequence = 0;
+        _transportSupported = IsTransportSupportedOnCurrentPlatform(out _transportDisableReason);
+
+        if (!_transportSupported)
+        {
+            LogTransportDisabledWarning();
+        }
+
         LoadPersistedQueue();
-        _queueSignal = new AutoResetEvent(false);
-        _dispatchCancellation = new CancellationTokenSource();
-        _dispatchTask = Task.Run(() => DispatchLoop(_dispatchCancellation.Token));
+
+        if (_transportSupported)
+        {
+            _queueSignal = new AutoResetEvent(false);
+            _dispatchCancellation = new CancellationTokenSource();
+            _dispatchTask = Task.Run(() => DispatchLoop(_dispatchCancellation.Token));
+        }
+
         RaiseMetricsChanged();
     }
 
@@ -133,6 +160,35 @@ public class AnalyticsManager : SingletonServiceBehaviour<AnalyticsManager>
         Log("powerup_start", new() { { "type", type }, { "duration", duration } });
 
     long GetNextSequenceId() => Interlocked.Increment(ref _nextEventSequence);
+
+    static bool IsTransportSupportedOnCurrentPlatform(out string reason)
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        reason = "WebGL builds do not support background threads or HttpClient.";
+        return false;
+#elif UNITY_WEBPLAYER
+        reason = "WebPlayer builds do not support background threads or HttpClient.";
+        return false;
+#else
+        reason = null;
+        return true;
+#endif
+    }
+
+    void LogTransportDisabledWarning()
+    {
+        if (_transportWarningLogged)
+        {
+            return;
+        }
+
+        string reason = string.IsNullOrEmpty(_transportDisableReason)
+            ? $"Analytics transport is not supported on this platform ({Application.platform})."
+            : _transportDisableReason;
+
+        Debug.LogWarning($"[Analytics] Analytics transport disabled: {reason}");
+        _transportWarningLogged = true;
+    }
 
     void DispatchLoop(CancellationToken token)
     {
