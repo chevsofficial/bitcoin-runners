@@ -1,0 +1,133 @@
+export type AppTheme = {
+  id: string;
+  name: string;
+  background: string;
+  surface: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  textPrimary: string;
+  textSecondary: string;
+  border: string;
+  muted: string;
+};
+
+export const THEMES: Record<string, AppTheme> = {
+  dark: {
+    id: 'dark',
+    name: 'Dark',
+    background: '#0f172a',
+    surface: '#1e293b',
+    primary: '#3b82f6',
+    secondary: '#8b5cf6',
+    accent: '#22d3ee',
+    textPrimary: '#e2e8f0',
+    textSecondary: '#cbd5e1',
+    border: '#334155',
+    muted: '#475569',
+  },
+  light: {
+    id: 'light',
+    name: 'Light',
+    background: '#f8fafc',
+    surface: '#ffffff',
+    primary: '#0ea5e9',
+    secondary: '#22c55e',
+    accent: '#f97316',
+    textPrimary: '#0f172a',
+    textSecondary: '#334155',
+    border: '#e2e8f0',
+    muted: '#cbd5e1',
+  },
+  pastel: {
+    id: 'pastel',
+    name: 'Pastel',
+    background: '#fef6fb',
+    surface: '#fff7ed',
+    primary: '#fbbf24',
+    secondary: '#a78bfa',
+    accent: '#fb7185',
+    textPrimary: '#1f2937',
+    textSecondary: '#4b5563',
+    border: '#f1f5f9',
+    muted: '#e2e8f0',
+  },
+  neon: {
+    id: 'neon',
+    name: 'Neon',
+    background: '#0b1021',
+    surface: '#111827',
+    primary: '#7c3aed',
+    secondary: '#14f195',
+    accent: '#f43f5e',
+    textPrimary: '#e5e7eb',
+    textSecondary: '#cbd5e1',
+    border: '#1f2937',
+    muted: '#374151',
+  },
+  amoled: {
+    id: 'amoled',
+    name: 'AMOLED',
+    background: '#000000',
+    surface: '#0a0a0a',
+    primary: '#22c55e',
+    secondary: '#3b82f6',
+    accent: '#eab308',
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    border: '#111827',
+    muted: '#1f2937',
+  },
+  nature: {
+    id: 'nature',
+    name: 'Nature',
+    background: '#0f172a',
+    surface: '#0b2531',
+    primary: '#16a34a',
+    secondary: '#65a30d',
+    accent: '#22c55e',
+    textPrimary: '#e2f3e4',
+    textSecondary: '#b5d5b9',
+    border: '#1e3a2c',
+    muted: '#2d4a36',
+  },
+  fall: {
+    id: 'fall',
+    name: 'Fall',
+    background: '#1f130a',
+    surface: '#2c1b0f',
+    primary: '#ea580c',
+    secondary: '#b45309',
+    accent: '#eab308',
+    textPrimary: '#f5f3ff',
+    textSecondary: '#e7e5e4',
+    border: '#3f2a1a',
+    muted: '#4b3020',
+  },
+  winter: {
+    id: 'winter',
+    name: 'Winter',
+    background: '#0b1220',
+    surface: '#132132',
+    primary: '#38bdf8',
+    secondary: '#0ea5e9',
+    accent: '#a855f7',
+    textPrimary: '#e0f2fe',
+    textSecondary: '#bfdbfe',
+    border: '#1e293b',
+    muted: '#2c3a50',
+  },
+  holiday: {
+    id: 'holiday',
+    name: 'Holiday',
+    background: '#0f172a',
+    surface: '#132a13',
+    primary: '#16a34a',
+    secondary: '#dc2626',
+    accent: '#fbbf24',
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    border: '#1f2937',
+    muted: '#334155',
+  },
+};
