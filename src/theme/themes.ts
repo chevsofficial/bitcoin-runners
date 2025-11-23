@@ -10,6 +10,7 @@ export type AppTheme = {
   textSecondary: string;
   border: string;
   muted: string;
+  isPro?: boolean;
 };
 
 export const THEMES: Record<string, AppTheme> = {
@@ -42,6 +43,7 @@ export const THEMES: Record<string, AppTheme> = {
   pastel: {
     id: 'pastel',
     name: 'Pastel',
+    isPro: true,
     background: '#fef6fb',
     surface: '#fff7ed',
     primary: '#fbbf24',
@@ -55,6 +57,7 @@ export const THEMES: Record<string, AppTheme> = {
   neon: {
     id: 'neon',
     name: 'Neon',
+    isPro: true,
     background: '#0b1021',
     surface: '#111827',
     primary: '#7c3aed',
@@ -68,6 +71,7 @@ export const THEMES: Record<string, AppTheme> = {
   amoled: {
     id: 'amoled',
     name: 'AMOLED',
+    isPro: true,
     background: '#000000',
     surface: '#0a0a0a',
     primary: '#22c55e',
@@ -81,6 +85,7 @@ export const THEMES: Record<string, AppTheme> = {
   nature: {
     id: 'nature',
     name: 'Nature',
+    isPro: true,
     background: '#0f172a',
     surface: '#0b2531',
     primary: '#16a34a',
@@ -94,6 +99,7 @@ export const THEMES: Record<string, AppTheme> = {
   fall: {
     id: 'fall',
     name: 'Fall',
+    isPro: true,
     background: '#1f130a',
     surface: '#2c1b0f',
     primary: '#ea580c',
@@ -107,6 +113,7 @@ export const THEMES: Record<string, AppTheme> = {
   winter: {
     id: 'winter',
     name: 'Winter',
+    isPro: true,
     background: '#0b1220',
     surface: '#132132',
     primary: '#38bdf8',
@@ -120,6 +127,7 @@ export const THEMES: Record<string, AppTheme> = {
   holiday: {
     id: 'holiday',
     name: 'Holiday',
+    isPro: true,
     background: '#0f172a',
     surface: '#132a13',
     primary: '#16a34a',
